@@ -1,13 +1,3 @@
-O erro que você está vendo ocorreu por um detalhe técnico do React: **Componentes no React devem obrigatoriamente começar com letra Maiúscula**. 
-
-No final do código anterior, eu tentei fazer um "truque" chamado `originalMainApp` (com letra minúscula) para separar a camada de impressão. O React achou que isso era uma tag HTML normal (como `<div>` ou `<span>`) e surtou quando tentamos passar propriedades complexas (como `userProfile`, `onLogout`) para ela.
-
-**A Solução Correta e mais Limpa:**
-Em vez de fazer truques com variáveis globais, eu **voltei a camada de impressão (PrintLayer) para dentro do `MainApp`** (exatamente como era no seu código original). Assim, a impressão tem acesso nativo a todas as variáveis (`viagens`, `caixa`, `passageiros`, etc.) sem dar nenhum erro no console e mantendo o design intacto.
-
-Aqui está o código completo corrigido e livre de erros no console. Pode copiar e substituir tudo:
-
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
