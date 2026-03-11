@@ -1,0 +1,1233 @@
+O erro que você está vendo ocorreu por um detalhe técnico do React: **Componentes no React devem obrigatoriamente começar com letra Maiúscula**. 
+
+No final do código anterior, eu tentei fazer um "truque" chamado `originalMainApp` (com letra minúscula) para separar a camada de impressão. O React achou que isso era uma tag HTML normal (como `<div>` ou `<span>`) e surtou quando tentamos passar propriedades complexas (como `userProfile`, `onLogout`) para ela.
+
+**A Solução Correta e mais Limpa:**
+Em vez de fazer truques com variáveis globais, eu **voltei a camada de impressão (PrintLayer) para dentro do `MainApp`** (exatamente como era no seu código original). Assim, a impressão tem acesso nativo a todas as variáveis (`viagens`, `caixa`, `passageiros`, etc.) sem dar nenhum erro no console e mantendo o design intacto.
+
+Aqui está o código completo corrigido e livre de erros no console. Pode copiar e substituir tudo:
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f0e13">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Nexo ERP">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nexo ERP - Simplificando sua Agência</title>
+  
+  <script>if (window.location.protocol === 'file:') { console.warn("Nexo: Rodando localmente. Para funcionamento 100% instale em um Servidor Web."); }</script>
+
+  <!-- Configuração do Tailwind para Modo Escuro e Cores Base -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            nDarkBg: '#0f0e13',
+            nDarkCard: '#151419',
+            nDarkBorder: '#2a2931',
+            nDarkHover: '#1c1b22',
+            nexoPrimary: '#9333ea',
+            nexoHover: '#7e22ce'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root { 
+      --nexo-neon: #9333ea; 
+      --bg-light: #f8fafc; 
+    }
+    
+    * { box-sizing: border-box; }
+    html, body { 
+      height: 100%; height: 100dvh; width: 100vw; margin: 0; padding: 0; overflow: hidden; 
+      font-family: 'Inter', sans-serif; 
+      background: var(--bg-light); 
+      -webkit-tap-highlight-color: transparent; overscroll-behavior: none; 
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    html.dark body { background: var(--nDarkBg); color: #f8fafc; }
+    
+    #root { height: 100%; width: 100%; display: flex; flex-direction: column; }
+    
+    /* Scrollbar estilizada para Desktop */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    html.dark ::-webkit-scrollbar-thumb { background: #3f3e46; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; } 
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes pulse-glow { 0% { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.4)); } 100% { filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.9)); } }
+    
+    .animate-slideup { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .animate-scalein { animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .animate-pulse-glow { animation: pulse-glow 2s infinite alternate ease-in-out; }
+
+    /* Estilos base de componentes Web */
+    .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02); transition: all 0.2s; }
+    html.dark .glass-card { background: var(--nDarkCard); border-color: var(--nDarkBorder); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+    
+    .glass-card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+    html.dark .glass-card-hover:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); border-color: #3f3e46; }
+    .glass-card-hover:active { transform: scale(0.98); }
+    
+    .neon-button { background: var(--nexo-neon); color: white; transition: all 0.2s; border: none; font-weight: 600; }
+    .neon-button:hover { background: var(--nexo-hover); box-shadow: 0 4px 15px rgba(147,51,234,0.3); transform: translateY(-1px); }
+    .neon-button:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(147,51,234,0.2); }
+    
+    .seat-btn { position: relative; border-radius: 8px 8px 4px 4px; border-bottom-width: 4px; transition: all 0.15s ease; }
+    .seat-btn:active { transform: scale(0.92); }
+    .seat-sel { background:linear-gradient(160deg,#9333ea,#7e22ce); color:#fff; border-color:#581c87; box-shadow:0 4px 16px rgba(147,51,234,.45); transform:scale(1.1); z-index:10; }
+    
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--nexo-neon) !important; box-shadow: 0 0 0 3px rgba(147,51,234,0.15); }
+    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+
+    /* ISOLAMENTO DE IMPRESSÃO - NÃO ALTERAR */
+    @media print { 
+        html, body, #root { height: auto !important; width: auto !important; overflow: visible !important; display: block !important; background-color: white !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; position: static !important; } 
+        .no-print { display: none !important; } 
+        .print-only { display: block !important; }
+        @page { margin: 1cm; size: portrait; } 
+    }
+  </style>
+</head>
+<body class="text-slate-800 dark:text-slate-100 transition-colors duration-300">
+  
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, updateEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    
+    const firebaseConfig = { apiKey: "AIzaSyAxyVFfsSBS1dNtBfiJoNHqkE5LyxUTRFI", authDomain: "nexo-crm-5325f.firebaseapp.com", projectId: "nexo-crm-5325f", storageBucket: "nexo-crm-5325f.firebasestorage.app", messagingSenderId: "145983577119", appId: "1:145983577119:web:003e53b89437cfb1b4092a" };
+    const app = initializeApp(firebaseConfig);
+    
+    window.NexoFB = { auth: getAuth(app), db: getFirestore(app), signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, updateEmail, EmailAuthProvider, reauthenticateWithCredential, doc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, query, where };
+    window.dispatchEvent(new Event('firebase-ready'));
+  </script>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    
+    // Utilitários mantidos do original
+    const fmt = (iso) => { if (!iso) return '—'; if (typeof iso === 'string') { try { return iso.split('T')[0].split('-').reverse().join('/'); } catch(e) { return '—'; } } if (iso.toDate) { return iso.toDate().toLocaleDateString('pt-BR'); } return '—'; };
+    const fmtHora = (iso) => { if (!iso) return ''; try { const d = typeof iso === 'string' ? new Date(iso) : (iso.toDate ? iso.toDate() : new Date()); return d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); } catch(e){return '';} };
+    const diasAte = (iso) => { if (!iso || typeof iso !== 'string') return null; try { const hoje = new Date(); hoje.setHours(0,0,0,0); return Math.round((new Date(iso + 'T00:00:00') - hoje) / 86400000); } catch(e) { return null; } };
+    const fmtMoeda = (v) => `R$ ${Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g,'.')}`;
+
+    const SoundManager = {
+        ctx: null,
+        init: function() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (this.ctx && this.ctx.state === 'suspended') { this.ctx.resume(); } },
+        playOscillator: function(freq, type, duration, vol) { if (!this.ctx || this.ctx.state === 'suspended') return; try { const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime); gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration); } catch(e) {} },
+        click: function() { this.playOscillator(600, 'sine', 0.1, 0.05); },
+        type: function() { this.playOscillator(800, 'triangle', 0.03, 0.02); },
+        success: function() { this.playOscillator(400, 'sine', 0.1, 0.05); setTimeout(() => this.playOscillator(600, 'sine', 0.2, 0.05), 100); },
+        error: function() { this.playOscillator(250, 'square', 0.15, 0.05); setTimeout(() => this.playOscillator(200, 'square', 0.2, 0.05), 150); },
+        login: function() { this.playOscillator(523.25, 'sine', 0.1, 0.05); setTimeout(() => this.playOscillator(659.25, 'sine', 0.1, 0.05), 100); setTimeout(() => this.playOscillator(783.99, 'sine', 0.3, 0.05), 200); }
+    };
+
+    window.addEventListener('pointerdown', (e) => { SoundManager.init(); if(e.target.closest('button') || e.target.closest('.cursor-pointer') || e.target.closest('a') || e.target.closest('.seat-btn')) { SoundManager.click(); } });
+    window.addEventListener('input', (e) => { SoundManager.init(); if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') { SoundManager.type(); } });
+
+    function isValidCPF(cpf) { cpf = cpf.replace(/[^\d]+/g,''); if(cpf == '' || cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false; let add = 0; for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i); let rev = 11 - (add % 11); if (rev == 10 || rev == 11) rev = 0; if (rev != parseInt(cpf.charAt(9))) return false; add = 0; for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i); rev = 11 - (add % 11); if (rev == 10 || rev == 11) rev = 0; if (rev != parseInt(cpf.charAt(10))) return false; return true; }
+    function isValidCNPJ(cnpj) { cnpj = cnpj.replace(/[^\d]+/g,''); if(cnpj == '' || cnpj.length != 14 || /^(\d)\1{13}$/.test(cnpj)) return false; let tamanho = cnpj.length - 2; let numeros = cnpj.substring(0,tamanho); let digitos = cnpj.substring(tamanho); let soma = 0; let pos = tamanho - 7; for (let i = tamanho; i >= 1; i--) { soma += numeros.charAt(tamanho - i) * pos--; if (pos < 2) pos = 9; } let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11; if (resultado != digitos.charAt(0)) return false; tamanho = tamanho + 1; numeros = cnpj.substring(0,tamanho); soma = 0; pos = tamanho - 7; for (let i = tamanho; i >= 1; i--) { soma += numeros.charAt(tamanho - i) * pos--; if (pos < 2) pos = 9; } resultado = soma % 11 < 2 ? 0 : 11 - soma % 11; if (resultado != digitos.charAt(1)) return false; return true; }
+
+    const applyMask = (v, type) => {
+        if(!v) return ''; let unmasked = v.replace(/\D/g, '');
+        if (type === 'cpf') { unmasked = unmasked.slice(0, 11); return unmasked.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2'); }
+        if (type === 'cpfcnpj') { if (unmasked.length <= 11) { return unmasked.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2'); } else { return unmasked.slice(0,14).replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2'); } }
+        if (type === 'phone') { unmasked = unmasked.slice(0, 11); if (unmasked.length > 10) return unmasked.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3'); if (unmasked.length > 6) return unmasked.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3'); if (unmasked.length > 2) return unmasked.replace(/^(\d{2})(\d{0,5})/, '($1) $2'); return unmasked.replace(/^(\d*)/, '($1'); }
+        return v;
+    };
+
+    const baseInpCls = "w-full p-3 rounded-xl text-sm bg-white border border-slate-200 text-slate-800 focus:bg-slate-50 transition-all outline-none dark:bg-[#1c1b22] dark:border-[#2a2931] dark:text-white dark:focus:bg-[#151419]";
+
+    function MaskedInp({ label, name, defaultValue = '', maskType, required, placeholder }) {
+        const[val, setVal] = useState(''); useEffect(() => { setVal(applyMask(defaultValue || '', maskType)); },[defaultValue, maskType]);
+        return ( <div className="w-full"> {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 ml-1">{label}</label>} <input type="text" name={name} value={val} onChange={e => setVal(applyMask(e.target.value, maskType))} required={required} placeholder={placeholder} className={baseInpCls} /> </div> );
+    }
+
+    function CurrencyInp({ label, name, defaultValue = 0, required, placeholder }) {
+        const[disp, setDisp] = useState('');
+        const formatMoney = (val) => { let num = val.toString().replace(/\D/g, ''); if(!num) num = '0'; num = (parseInt(num, 10) / 100).toFixed(2); return num.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+        useEffect(() => { setDisp(formatMoney((parseFloat(defaultValue) || 0).toFixed(2))); },[defaultValue]);
+        const rawValue = disp.replace(/\./g, '').replace(',', '.');
+        return ( <div className="w-full"> {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 ml-1">{label}</label>} <div className="relative"> <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">R$</span> <input type="text" value={disp} onChange={e => setDisp(formatMoney(e.target.value))} required={required} placeholder={placeholder || "0,00"} className={`${baseInpCls} pl-10`} /> </div> <input type="hidden" name={name} value={rawValue} /> </div> );
+    }
+
+    function SearchBar({ value, onChange, placeholder, showDates = false, startDate, setStartDate, endDate, setEndDate }) {
+        return (
+            <div className="glass-card p-3 rounded-xl mb-6 flex flex-col md:flex-row gap-3">
+                <div className="relative flex-1">
+                    <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="w-full pl-10 p-2.5 rounded-lg text-sm bg-slate-50 dark:bg-nDarkBg border border-slate-200 dark:border-nDarkBorder focus:border-purple-500 text-slate-800 dark:text-white transition-all outline-none" />
+                </div>
+                {showDates && (
+                    <div className="flex gap-2 flex-col sm:flex-row">
+                        <div className="flex items-center bg-slate-50 dark:bg-nDarkBg border border-slate-200 dark:border-nDarkBorder rounded-lg px-3"><span className="text-xs text-slate-400 font-bold uppercase mr-2 shrink-0">De</span><input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} className="w-full p-2 text-sm outline-none bg-transparent text-slate-700 dark:text-slate-300 custom-date-input" /></div>
+                        <div className="flex items-center bg-slate-50 dark:bg-nDarkBg border border-slate-200 dark:border-nDarkBorder rounded-lg px-3"><span className="text-xs text-slate-400 font-bold uppercase mr-2 shrink-0">Até</span><input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} className="w-full p-2 text-sm outline-none bg-transparent text-slate-700 dark:text-slate-300 custom-date-input" /></div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    function CustomDialog({ config, onClose }) {
+        if (!config.isOpen) return null;
+        return ReactDOM.createPortal(
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-5 animate-scalein no-print" style={{background:'rgba(15,23,42,0.85)', backdropFilter:'blur(8px)'}}>
+                <div className="bg-[#1c1b22] border border-[#2a2931] w-full max-w-sm rounded-[2rem] shadow-2xl p-6 text-center relative">
+                    <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 border ${config.type === 'confirm' ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : (config.title==='Sucesso'||config.title.includes('Recebemos') ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : (config.title==='Erro'||config.title.includes('Negado')||config.title.includes('Atenção') ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'))}`}>
+                        <i className={`fa-solid ${config.type === 'confirm' ? 'fa-triangle-exclamation' : (config.title==='Sucesso' ? 'fa-check' : 'fa-bell')} text-2xl`}></i>
+                    </div>
+                    <h3 className="text-xl font-black text-white mb-2">{config.title}</h3>
+                    <p className="text-sm text-gray-400 mb-8">{config.message}</p>
+                    <div className="flex gap-3">
+                        {config.type === 'confirm' && ( <button onClick={onClose} className="flex-1 py-3 rounded-xl font-bold text-slate-300 bg-[#2a2931] hover:bg-[#3f3e46] transition-all">Cancelar</button> )}
+                        <button onClick={() => { if(config.onConfirm) config.onConfirm(); onClose(); }} className={`flex-1 py-3 rounded-xl font-bold text-white transition-transform ${config.type === 'confirm' ? 'bg-red-600 hover:bg-red-500' : 'bg-purple-600 hover:bg-purple-500'}`}>
+                            {config.type === 'confirm' ? 'Confirmar' : 'Entendi'}
+                        </button>
+                    </div>
+                </div>
+            </div>, document.body
+        );
+    }
+
+    function Modal({ onClose, children, title }) { 
+      return ReactDOM.createPortal( 
+        <div className="fixed inset-0 z-[9900] flex items-end md:items-center justify-center p-0 md:p-6 no-print transition-colors" style={{background:'rgba(15,23,42,0.6)', backdropFilter:'blur(4px)'}}> 
+            <div className="bg-white dark:bg-nDarkCard border dark:border-nDarkBorder w-full md:max-w-xl lg:max-w-2xl rounded-t-[2rem] md:rounded-[2rem] shadow-2xl relative animate-slideup flex flex-col max-h-[90vh]"> 
+                <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 dark:border-nDarkBorder shrink-0"> 
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">{title || "Detalhes"}</h3> 
+                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-nDarkHover text-slate-500 dark:text-slate-300 flex items-center justify-center font-bold hover:bg-slate-200 transition-colors"><i className="fa-solid fa-xmark"></i></button> 
+                </div> 
+                <div className="p-6 overflow-y-auto no-scrollbar pb-safe flex-1 relative"> 
+                    {children} 
+                </div> 
+            </div> 
+        </div>, document.body ); 
+    }
+
+    function CustomSelect({ name, label, value, defaultValue, onChange, options, placeholder = "Selecione...", required }) {
+        const isControlled = value !== undefined; const[isOpen, setIsOpen] = useState(false); const[internalVal, setInternalVal] = useState(defaultValue || ''); const currentVal = isControlled ? value : internalVal; const selectedOption = options.find(o => o.value === currentVal);
+        const handleSelect = (val) => { if (!isControlled) setInternalVal(val); if(onChange) onChange(val); setIsOpen(false); };
+        return ( <div className="relative w-full"> {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 ml-1">{label}</label>} <div onClick={() => setIsOpen(true)} className={`w-full p-3 rounded-xl text-sm bg-white dark:bg-[#1c1b22] border border-slate-200 dark:border-[#2a2931] flex justify-between items-center cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-[#151419] ${!selectedOption ? 'text-slate-400' : 'text-slate-800 dark:text-white font-medium'}`}> <span>{selectedOption ? selectedOption.label : placeholder}</span> <i className="fa-solid fa-chevron-down text-slate-400"></i> </div> <input type="hidden" name={name} value={currentVal} required={required} /> {isOpen && ( <Modal onClose={() => setIsOpen(false)} title={label || "Selecione uma opção"}> <div className="grid grid-cols-1 md:grid-cols-2 gap-2"> {options.map(opt => ( <button key={opt.value} type="button" onClick={() => handleSelect(opt.value)} className={`w-full text-left p-4 rounded-xl font-medium transition-all flex justify-between items-center ${currentVal === opt.value ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30' : 'bg-slate-50 dark:bg-nDarkBg text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-nDarkBorder hover:bg-slate-100 dark:hover:bg-nDarkHover'}`}> <span className="truncate">{opt.label}</span> {currentVal === opt.value && <i className="fa-solid fa-check text-purple-600 dark:text-purple-400 shrink-0 ml-2"></i>} </button> ))} {options.length === 0 && <p className="col-span-full text-center text-sm text-slate-400 py-6">Nenhuma opção disponível.</p>} </div> </Modal> )} </div> );
+    }
+
+    function NotificacaoItem({ notif, onDelete, onRead }) {
+        return ( <div onClick={() => !notif.lida && onRead(notif.id)} className={`p-4 rounded-xl border relative transition-colors cursor-pointer flex gap-4 items-start ${notif.lida ? 'bg-slate-50 dark:bg-nDarkCard border-slate-200 dark:border-nDarkBorder opacity-75' : 'bg-white dark:bg-[#1c1b22] border-purple-200 dark:border-purple-500/30 shadow-sm'}`}> {!notif.lida && <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 rounded-l-xl"></div>} <div className="flex-1"> <div className="flex justify-between items-center mb-1"> <h4 className={`font-bold text-sm ${notif.lida ? 'text-slate-700 dark:text-slate-300' : 'text-purple-700 dark:text-purple-400'}`}>{notif.titulo}</h4> <span className="text-[10px] text-slate-400">{fmt(notif.data)}</span> </div> <p className="text-sm text-slate-600 dark:text-slate-400">{notif.mensagem}</p> </div> <button onClick={(e)=>{e.stopPropagation(); onDelete(notif.id);}} className="text-slate-300 hover:text-red-500 transition-colors p-2"><i className="fa-solid fa-trash"></i></button> </div> );
+    }
+
+    // Componentes de Layout Genéricos
+    function SectionHeader({ title, action }) { return <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h2>{action}</div>; }
+    function AddBtn({ onClick, active, label="Novo" }) { return <button onClick={onClick} className={`px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all font-semibold ${active ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30' : 'neon-button'}`}>{active ? <><i className="fa-solid fa-xmark"></i> Cancelar</> : <><i className="fa-solid fa-plus"></i> <span className="hidden sm:inline">{label}</span></>}</button>; }
+    function Inp({ label, ...props }) { return <div className="w-full">{label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 ml-1">{label}</label>}<input {...props} className={baseInpCls} /></div>; }
+    function FormCard({ children, onSubmit }) { return <form onSubmit={onSubmit} className="glass-card rounded-2xl p-5 md:p-6 animate-slideup border-t-4 border-t-purple-500 mb-6 shadow-lg"><div className="grid grid-cols-1 md:grid-cols-2 gap-5">{children}</div></form>; }
+    function InfoRow({ icon, label, value, color='#9333ea' }) { return (<div className="flex items-start gap-3 py-3 border-b border-slate-100 dark:border-nDarkBorder last:border-0"><div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{background:`${color}15`}}><i className={`fa-solid ${icon} text-base`} style={{color}}></i></div><div className="flex-1 min-w-0"><p className="text-xs font-semibold text-slate-400">{label}</p><p className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">{value}</p></div></div>); }
+    function StatCard({ icon, label, value, bgClass }) { return ( <div className={`rounded-2xl p-5 shadow-sm relative overflow-hidden transition-transform hover:scale-[1.02] ${bgClass}`}> <div className="flex justify-between items-start relative z-10"> <div> <p className="text-xs font-bold text-white/80 uppercase tracking-wider mb-1">{label}</p> <p className="text-3xl font-black text-white">{value}</p> </div> <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm"><i className={`fa-solid ${icon} text-white text-xl`}></i></div> </div> </div> ); }
+
+    /* ─── TELA DE LOGIN ─── */
+    function Login({ showDialog }) {
+      const[email, setEmail] = useState(''); const[senha, setSenha] = useState(''); const[loading, setLoading] = useState(false);
+      const handleLogin = async (e) => { e.preventDefault(); setLoading(true); try { await window.NexoFB.signInWithEmailAndPassword(window.NexoFB.auth, email, senha); SoundManager.login(); } catch(error) { showDialog('alert', 'Acesso Negado', 'Verifique o e-mail corporativo e a senha fornecida.'); setLoading(false); } };
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-[#0f0e13] px-5 relative overflow-hidden z-50">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 bg-purple-600 blur-[100px] transform translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-20 bg-blue-900 blur-[100px] transform -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+
+          <div className="w-full max-w-md z-10 animate-slideup">
+            <div className="mb-10 text-center relative">
+                <div className="w-20 h-20 mx-auto flex items-center justify-center relative mb-4">
+                    <div className="absolute inset-0 bg-purple-600 blur-[20px] opacity-40 rounded-full animate-pulse-glow"></div>
+                    <svg viewBox="0 0 100 100" className="w-full h-full relative z-10" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#c084fc" /><stop offset="100%" stopColor="#6b21a8" /></linearGradient></defs><path d="M 25 15 C 32 15 35 20 35 25 L 35 50 L 62 18 C 68 12 75 15 75 25 L 75 85 C 68 85 65 80 65 75 L 65 50 L 38 82 C 32 88 25 85 25 75 Z" fill="url(#lg1)"/></svg>
+                </div>
+                <h2 className="text-4xl font-black text-white tracking-tight">NEXO <span className="font-light text-purple-400">ERP</span></h2>
+                <p className="text-purple-400/80 font-medium text-sm mt-2">Plataforma de Gestão em Turismo</p>
+            </div>
+
+            <div className="bg-[#1c1b22]/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-[#2a2931]">
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div><label className="block text-xs font-semibold text-gray-400 mb-2">E-mail Corporativo</label><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 rounded-xl text-sm bg-[#0f0e13] border border-[#2a2931] text-white focus:border-purple-500 transition-all outline-none" placeholder="empresa@email.com" /></div>
+                <div><label className="block text-xs font-semibold text-gray-400 mb-2">Senha</label><input type="password" required value={senha} onChange={e=>setSenha(e.target.value)} className="w-full p-3.5 rounded-xl text-sm bg-[#0f0e13] border border-[#2a2931] text-white focus:border-purple-500 transition-all outline-none" placeholder="••••••••" /></div>
+                <button type="submit" disabled={loading} className="w-full text-white font-bold py-4 rounded-xl mt-2 transition-all flex items-center justify-center gap-2 hover:bg-purple-500 active:scale-95 bg-purple-600 shadow-lg shadow-purple-900/50 disabled:opacity-70">{loading ? <i className="fa-solid fa-circle-notch fa-spin text-lg"></i> : 'Acessar Sistema'}</button>
+              </form>
+            </div>
+            <p className="text-center text-xs text-white/30 mt-8 font-medium">&copy; 2026 NEXO BRASIL</p>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── CONFIGURAÇÕES DE CONTA & SUPORTE ─── */
+    function Configuracoes({ userProfile, chamados, onClose, onLogout, showDialog, theme, toggleTheme }) {
+      const [view, setView] = useState('menu'); 
+      const[senhaAtual, setSenhaAtual] = useState(''); const[novoDado, setNovoDado] = useState(''); const[loading, setLoading] = useState(false);
+      
+      const[supAssunto, setSupAssunto] = useState(''); const[supMsg, setSupMsg] = useState('');
+      const[ticketAberto, setTicketAberto] = useState(null);
+      const chatEndRef = useRef(null);
+
+      useEffect(() => { if(ticketAberto && view === 'chat_chamado') chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [ticketAberto, chamados, view]);
+      useEffect(() => { if (ticketAberto) { const atualizado = chamados.find(c => c.id === ticketAberto.id); if (atualizado) setTicketAberto(atualizado); } }, [chamados]);
+
+      const reautenticar = async () => { const { auth, EmailAuthProvider, reauthenticateWithCredential } = window.NexoFB; const cred = EmailAuthProvider.credential(auth.currentUser.email, senhaAtual); await reauthenticateWithCredential(auth.currentUser, cred); };
+      const salvarAlteracao = async (e) => { e.preventDefault(); setLoading(true); try { await reautenticar(); if(view === 'email') { await window.NexoFB.updateEmail(window.NexoFB.auth.currentUser, novoDado); showDialog('alert', 'Sucesso', "E-mail atualizado com sucesso!"); } else if (view === 'senha') { await window.NexoFB.updatePassword(window.NexoFB.auth.currentUser, novoDado); showDialog('alert', 'Sucesso', "Senha atualizada com sucesso!"); } setView('menu'); } catch(err) { showDialog('alert', 'Erro de Autenticação', "A senha atual informada está incorreta."); } setLoading(false); };
+
+      const enviarNovoChamado = async (e) => { e.preventDefault(); setLoading(true); try { const { db, collection, addDoc } = window.NexoFB; const novaMensagem = { autor: 'Cliente', msg: supMsg, data: new Date().toISOString() }; await addDoc(collection(db, "chamados_suporte"), { empresaId: userProfile.empresaId, nomeEmpresa: userProfile.nome, assunto: supAssunto, mensagem: supMsg, data: new Date().toISOString(), status: 'aberto', historico: [novaMensagem] }); showDialog('alert', 'Sucesso', 'Chamado aberto!'); setView('lista_chamados'); setSupAssunto(''); setSupMsg(''); } catch(err) { showDialog('alert', 'Erro', 'Não foi possível enviar.'); } setLoading(false); }
+      const enviarReplica = async (e) => { e.preventDefault(); if(!supMsg.trim()) return; setLoading(true); try { const { db, doc, updateDoc } = window.NexoFB; const ticketDoc = doc(db, "chamados_suporte", ticketAberto.id); const novoHist = [...(ticketAberto.historico||[]), { autor: 'Cliente', msg: supMsg, data: new Date().toISOString() }]; await updateDoc(ticketDoc, { historico: novoHist, status: 'aberto' }); setSupMsg(''); } catch(err) { showDialog('alert', 'Erro', 'Erro ao enviar.'); } setLoading(false); }
+
+      const btnItemCls = "w-full flex justify-between items-center p-4 rounded-xl font-medium text-sm text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors dark:bg-nDarkBg dark:border-nDarkBorder dark:text-slate-300 dark:hover:bg-nDarkHover";
+
+      return (
+        <Modal onClose={onClose} title={view === 'menu' ? "Minha Conta" : view === 'assinatura' ? "Assinatura" : view === 'lista_chamados' ? "Suporte Nexo" : view === 'novo_chamado' ? "Novo Chamado" : view === 'chat_chamado' ? "Atendimento" : `Alterar ${view==='email'?'E-mail':'Senha'}`}>
+          {view === 'menu' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                  <div className="rounded-2xl p-6 mb-6 text-center border border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10">
+                    <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-white text-3xl font-black mb-3 bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md">{userProfile.nome.charAt(0)}</div>
+                    <p className="font-bold text-lg text-slate-800 dark:text-white">{userProfile.nome}</p>
+                    <p className="text-sm text-slate-500">{userProfile.email}</p>
+                  </div>
+              </div>
+              <div className="space-y-3">
+                <button onClick={toggleTheme} className={btnItemCls}><span className="flex items-center gap-3"><i className={`fa-solid ${theme==='dark'?'fa-sun text-amber-400':'fa-moon text-indigo-500'} w-5`}></i> Tema: {theme==='dark'?'Escuro':'Claro'}</span><i className="fa-solid fa-rotate text-slate-400"></i></button>
+                <button onClick={()=>setView('assinatura')} className={btnItemCls}><span className="flex items-center gap-3"><i className="fa-solid fa-file-contract text-purple-500 w-5"></i> Minha Assinatura</span><i className="fa-solid fa-chevron-right text-slate-400"></i></button>
+                <button onClick={()=>setView('email')} className={btnItemCls}><span className="flex items-center gap-3"><i className="fa-solid fa-envelope text-slate-400 w-5"></i> Trocar E-mail</span><i className="fa-solid fa-chevron-right text-slate-400"></i></button>
+                <button onClick={()=>setView('senha')} className={btnItemCls}><span className="flex items-center gap-3"><i className="fa-solid fa-lock text-slate-400 w-5"></i> Alterar Senha</span><i className="fa-solid fa-chevron-right text-slate-400"></i></button>
+                <button onClick={()=>setView('lista_chamados')} className={`w-full flex justify-between items-center p-4 rounded-xl font-medium text-sm text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-400`}><span className="flex items-center gap-3"><i className="fa-solid fa-headset text-blue-500 w-5"></i> Ajuda / Suporte</span><i className="fa-solid fa-chevron-right text-blue-400"></i></button>
+                <button onClick={()=>{ onClose(); onLogout(); }} className="w-full mt-4 py-3.5 rounded-xl font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-400"><i className="fa-solid fa-power-off mr-2"></i> Encerrar Sessão</button>
+              </div>
+            </div>
+          ) : view === 'assinatura' ? (
+             <div className="animate-scalein max-w-sm mx-auto space-y-4">
+                <div className="bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 p-6 rounded-2xl text-center"><i className="fa-solid fa-crown text-4xl text-purple-500 mb-3"></i><h3 className="font-black text-2xl text-purple-800 dark:text-purple-400">{userProfile.assinatura?.plano || 'Não informado'}</h3><p className="text-xs text-purple-600 dark:text-purple-500 font-bold uppercase mt-1">Plano Atual</p></div>
+                <div className="bg-slate-50 dark:bg-nDarkBg border border-slate-200 dark:border-nDarkBorder p-4 rounded-2xl"><InfoRow icon="fa-calendar-check" label="Vencimento" value={fmt(userProfile.assinatura?.vencimento) || '—'} /><InfoRow icon="fa-money-bill" label="Mensalidade" value={userProfile.assinatura?.valor ? fmtMoeda(userProfile.assinatura.valor) : '—'} color="#10b981" /></div>
+                <button onClick={()=>setView('menu')} className="w-full py-3.5 mt-2 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors dark:bg-nDarkBg dark:text-slate-300 dark:border border-nDarkBorder">Voltar</button>
+            </div>
+          ) : view === 'lista_chamados' ? (
+             <div className="animate-scalein flex flex-col h-[60vh] md:h-96">
+                 <button onClick={()=>setView('novo_chamado')} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-blue-700 transition-colors mb-4 flex justify-center items-center gap-2"><i className="fa-solid fa-plus"></i> Novo Chamado</button>
+                 <div className="space-y-3 overflow-y-auto flex-1 pr-2 no-scrollbar">
+                     {chamados.length === 0 ? <div className="text-center py-10 text-slate-400 font-medium text-sm">Nenhum chamado aberto.</div> : chamados.map(c => (
+                         <div key={c.id} onClick={()=>{setTicketAberto(c); setView('chat_chamado');}} className="bg-slate-50 dark:bg-nDarkBg border border-slate-200 dark:border-nDarkBorder p-4 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-nDarkHover transition-colors">
+                             <div className="flex justify-between items-start mb-2"><h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate pr-4">{c.assunto}</h4><span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-widest shrink-0 ${(c.status==='resolvido'||c.status==='encerrado')?'bg-slate-200 text-slate-600 dark:bg-[#2a2931] dark:text-slate-400':c.status==='respondido'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400':'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'}`}>{c.status}</span></div>
+                             <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 truncate">{c.historico?.[c.historico.length-1]?.msg || c.mensagem}</p>
+                             <p className="text-xs text-slate-400"><i className="fa-regular fa-clock mr-1"></i> {fmt(c.data)} às {fmtHora(c.data)}</p>
+                         </div>
+                     ))}
+                 </div>
+                 <button onClick={()=>setView('menu')} className="w-full py-3 mt-4 rounded-xl font-bold text-slate-600 bg-slate-100 transition-colors dark:bg-nDarkBg dark:text-slate-300 border dark:border-nDarkBorder">Voltar</button>
+             </div>
+          ) : view === 'novo_chamado' ? (
+             <div className="animate-scalein max-w-md mx-auto">
+                 <form onSubmit={enviarNovoChamado} className="space-y-4">
+                     <Inp required value={supAssunto} onChange={e=>setSupAssunto(e.target.value)} label="Assunto" placeholder="Ex: Erro ao gerar recibo" />
+                     <div><label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Detalhes (Mensagem)</label><textarea required value={supMsg} onChange={e=>setSupMsg(e.target.value)} rows="5" className={baseInpCls} placeholder="Descreva sua solicitação..."></textarea></div>
+                     <div className="flex gap-3 mt-4">
+                        <button type="button" onClick={()=>setView('lista_chamados')} className="w-14 py-3.5 rounded-xl font-bold text-slate-600 bg-slate-100 transition-colors dark:bg-nDarkBg border dark:border-nDarkBorder"><i className="fa-solid fa-arrow-left"></i></button>
+                        <button type="submit" disabled={loading} className="flex-1 py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700">{loading?'Enviando...':'Enviar'}</button>
+                    </div>
+                 </form>
+             </div>
+          ) : view === 'chat_chamado' && ticketAberto ? (
+              <div className="animate-scalein flex flex-col h-[65vh] md:h-[500px]">
+                  <div className="bg-slate-50 dark:bg-[#1c1b22] p-4 rounded-xl mb-4 shrink-0 flex justify-between items-center border border-slate-200 dark:border-[#2a2931]">
+                      <div className="flex-1 pr-4"><p className="text-xs font-semibold text-slate-500 uppercase mb-1">Assunto</p><p className="font-bold text-sm text-slate-800 dark:text-white truncate">{ticketAberto.assunto}</p></div>
+                      <span className={`text-xs font-bold px-3 py-1 rounded uppercase tracking-widest shrink-0 ${ticketAberto.status==='resolvido'||ticketAberto.status==='encerrado'?'bg-slate-200 text-slate-600 dark:bg-[#2a2931] dark:text-slate-400':ticketAberto.status==='respondido'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400':'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'}`}>{ticketAberto.status}</span>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4 flex flex-col pr-2">
+                      {(ticketAberto.historico || [{autor:'Cliente', msg: ticketAberto.mensagem, data: ticketAberto.data}]).map((h, i) => {
+                          const isMe = h.autor === 'Cliente';
+                          return (
+                              <div key={i} className={`flex flex-col max-w-[85%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
+                                  <span className="text-[10px] font-medium text-slate-400 mb-1 px-1">{isMe ? 'Você' : 'Suporte Nexo'} • {fmt(h.data)} {fmtHora(h.data)}</span>
+                                  <div className={`p-3.5 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-purple-600 text-white rounded-tr-sm' : 'bg-slate-100 dark:bg-[#1c1b22] text-slate-800 dark:text-slate-200 rounded-tl-sm'}`}>{h.msg}</div>
+                              </div>
+                          )
+                      })}
+                      <div ref={chatEndRef} className="h-2" />
+                  </div>
+
+                  {ticketAberto.status === 'resolvido' || ticketAberto.status === 'encerrado' ? (
+                      <div className="mt-3 p-4 bg-slate-50 dark:bg-[#1c1b22] border border-slate-200 dark:border-[#2a2931] rounded-xl text-center shrink-0">
+                          <p className="text-sm font-bold text-slate-600 dark:text-slate-400"><i className="fa-solid fa-lock mr-2"></i>Chamado Encerrado</p>
+                          <button onClick={()=>setView('lista_chamados')} className="mt-3 px-6 py-2 rounded-lg font-bold text-sm bg-slate-200 dark:bg-[#2a2931] text-slate-700 dark:text-slate-300">Voltar</button>
+                      </div>
+                  ) : (
+                      <form onSubmit={enviarReplica} className="mt-4 shrink-0 flex gap-2">
+                          <button type="button" onClick={()=>setView('lista_chamados')} className="w-12 h-12 rounded-xl text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors dark:bg-[#1c1b22] border dark:border-[#2a2931]"><i className="fa-solid fa-arrow-left"></i></button>
+                          <input type="text" required value={supMsg} onChange={e=>setSupMsg(e.target.value)} placeholder="Escreva sua resposta..." className="flex-1 px-4 rounded-xl text-sm bg-slate-50 border border-slate-200 outline-none focus:border-purple-500 dark:bg-[#1c1b22] dark:border-[#2a2931] dark:text-white" />
+                          <button type="submit" disabled={loading} className="w-12 h-12 rounded-xl text-white bg-blue-600 hover:bg-blue-700 shrink-0 flex justify-center items-center">{loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>}</button>
+                      </form>
+                  )}
+              </div>
+          ) : (
+            <div className="animate-scalein max-w-md mx-auto">
+              <form onSubmit={salvarAlteracao} className="space-y-4">
+                <Inp type="password" required value={senhaAtual} onChange={e=>setSenhaAtual(e.target.value)} label="Senha Atual (Para confirmação)" placeholder="••••••••" />
+                <Inp type={view==='email'?'email':'text'} required value={novoDado} onChange={e=>setNovoDado(e.target.value)} label={`Novo ${view==='email'?'E-mail':'Senha'}`} placeholder={view==='email'?'novo@email.com':'Nova senha (mín. 6 chars)'} minLength={view==='senha'?6:0} />
+                <div className="flex gap-3 mt-6"><button type="button" onClick={()=>setView('menu')} className="w-14 py-3.5 rounded-xl font-bold text-slate-600 bg-slate-100 dark:bg-nDarkBg border dark:border-nDarkBorder"><i className="fa-solid fa-arrow-left"></i></button><button type="submit" disabled={loading} className="flex-1 py-3.5 rounded-xl font-bold text-white neon-button">{loading?'Salvando...':'Confirmar'}</button></div>
+              </form>
+            </div>
+          )}
+        </Modal>
+      );
+    }
+
+    /* ─── TELAS DE MÓDULOS ─── */
+    function Dashboard({ viagens, caixa, passageiros, reservas }) {
+      const saldo = caixa.filter(c=>c.tipo==='entrada').reduce((a,b)=>a+b.valor,0) - caixa.filter(c=>c.tipo==='saida').reduce((a,b)=>a+b.valor,0);
+      const entradas = caixa.filter(c=>c.tipo==='entrada').reduce((a,b)=>a+b.valor,0);
+      const saidas = caixa.filter(c=>c.tipo==='saida').reduce((a,b)=>a+b.valor,0);
+      const proximas = viagens.map(v => ({ ...v, diasAte: diasAte(v.dataSaida) })).filter(v => v.diasAte !== null && v.diasAte >= 0).sort((a,b) => a.diasAte - b.diasAte).slice(0, 5);
+
+      return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="rounded-2xl p-6 relative overflow-hidden lg:col-span-2 shadow-sm" style={{background:'linear-gradient(135deg,#9333ea 0%,#6b21a8 100%)'}}>
+                <div className="absolute top-0 right-0 opacity-10 text-[150px] leading-none translate-x-10 -translate-y-6"><i className="fa-solid fa-wallet"></i></div>
+                <p className="text-xs font-bold uppercase tracking-widest text-white/80 mb-2">Caixa Geral</p>
+                <h3 className="text-4xl md:text-5xl font-black text-white">{fmtMoeda(saldo)}</h3>
+                <div className="flex gap-6 mt-6">
+                  <span className="text-sm text-white/90 font-medium flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-lg"><div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>Entradas: {fmtMoeda(entradas)}</span>
+                  <span className="text-sm text-white/90 font-medium flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-lg"><div className="w-2.5 h-2.5 rounded-full bg-rose-400"></div>Saídas: {fmtMoeda(saidas)}</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                <StatCard icon="fa-map-location-dot" label="Viagens Criadas" value={viagens.length} bgClass="bg-gradient-to-br from-blue-600 to-cyan-500" />
+                <StatCard icon="fa-users" label="Clientes Ativos" value={passageiros.length} bgClass="bg-gradient-to-br from-emerald-500 to-teal-400" />
+              </div>
+          </div>
+
+          <div className="glass-card rounded-2xl overflow-hidden p-6">
+            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4"><i className="fa-solid fa-calendar-check mr-2 text-purple-600"></i>Próximas Viagens</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {proximas.length === 0 ? <div className="col-span-full py-10 text-center text-slate-400 font-medium"><i className="fa-solid fa-calendar-xmark text-4xl mb-3 block text-slate-300 dark:text-slate-600"></i>Agenda livre. Nenhuma viagem próxima.</div> : proximas.map(v => {
+                  const ocupados = Object.keys(reservas[v.id]||{}).length; const pct = Math.round((ocupados/46)*100); const pax = passageiros.filter(p=>p.viagemId===v.id).length;
+                  return (
+                    <div key={v.id} className="rounded-xl p-5 bg-slate-50 border border-slate-200 dark:bg-[#1c1b22] dark:border-[#2a2931] hover:border-purple-300 transition-colors">
+                      <div className="flex items-start justify-between mb-3"><div className="flex-1 pr-2"><p className="font-bold text-slate-800 dark:text-slate-100 text-base truncate">{v.destino}</p><p className="text-xs text-slate-500 mt-1"><i className="fa-solid fa-location-dot mr-1"></i>{v.localEmbarque}</p></div><div className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 shrink-0 uppercase tracking-wide">{v.diasAte === 0 ? 'Hoje!' : v.diasAte === 1 ? 'Amanhã' : `Em ${v.diasAte} dias`}</div></div>
+                      <div className="flex gap-4 text-xs text-slate-600 dark:text-slate-400 font-medium mb-4"><span><i className="fa-solid fa-calendar-day mr-1 text-purple-500"></i>{fmt(v.dataSaida)} · {v.horaSaida}</span><span><i className="fa-solid fa-users mr-1 text-green-500"></i>{pax} p.</span></div>
+                      <div className="flex items-center gap-3"><div className="flex-1 h-2.5 rounded-full bg-slate-200 dark:bg-[#2a2931] overflow-hidden"><div className="h-full rounded-full bg-purple-600 transition-all" style={{width:`${pct}%`}}></div></div><span className="text-xs font-bold text-slate-500">{ocupados}/46</span></div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Viagens({ viagensFiltered, userProfile, showDialog, searchParams }) {
+      const[showForm, setShowForm] = useState(false); const[vSelecionada, setVSel] = useState(null); const[isEditing, setIsEditing] = useState(false);
+
+      const salvar = async (e) => {
+        e.preventDefault(); const t = e.target;
+        const d = { destino: t.destino.value, dataSaida: t.dataSaida.value, horaSaida: t.horaSaida.value, dataRetorno: t.dataRetorno.value, horaRetorno: t.horaRetorno.value, localEmbarque: t.localEmbarque.value, valor: parseFloat(t.valor.value || 0) };
+        const { db, collection, addDoc, doc, updateDoc } = window.NexoFB; const colRef = collection(db, "empresas", userProfile.empresaId, "viagens");
+        if (isEditing && vSelecionada) { await updateDoc(doc(colRef, vSelecionada.id), d); setVSel(null); setIsEditing(false); } else { await addDoc(colRef, d); setShowForm(false); }
+      };
+      const excluir = () => { showDialog('confirm', 'Excluir Viagem', 'Tem certeza que deseja excluir esta viagem definitivamente?', async () => { const { db, doc, deleteDoc } = window.NexoFB; await deleteDoc(doc(db, "empresas", userProfile.empresaId, "viagens", vSelecionada.id)); setVSel(null); }); };
+
+      return (
+        <div className="space-y-4">
+          <SectionHeader title="Gestão de Viagens" action={<AddBtn onClick={()=>setShowForm(!showForm)} active={showForm} label="Nova Viagem" />} />
+          <SearchBar value={searchParams.searchViagens} onChange={searchParams.setSearchViagens} placeholder="Pesquisar destino ou embarque..." showDates={true} startDate={searchParams.dateViagensStart} setStartDate={searchParams.setDateViagensStart} endDate={searchParams.dateViagensEnd} setEndDate={searchParams.setDateViagensEnd} />
+          
+          {showForm && (
+            <FormCard onSubmit={salvar}>
+              <div className="md:col-span-2"><Inp name="destino" required placeholder="Destino Principal" label="Destino" /></div>
+              <Inp type="date" name="dataSaida" required label="Data Saída" /><Inp type="time" name="horaSaida" required label="Hora Saída" />
+              <Inp type="date" name="dataRetorno" required label="Data Retorno" /><Inp type="time" name="horaRetorno" required label="Hora Retorno" />
+              <div className="md:col-span-2"><Inp name="localEmbarque" required placeholder="Ponto de Encontro/Embarque" label="Local Embarque" /></div>
+              <div className="md:col-span-2"><CurrencyInp name="valor" required label="Valor Sugerido do Pacote (R$)" /></div>
+              <div className="md:col-span-2 mt-2 flex justify-end"><button type="submit" className="px-8 py-3 rounded-xl text-white font-bold neon-button">Salvar Viagem</button></div>
+            </FormCard>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {viagensFiltered.map(v => (
+              <div key={v.id} onClick={()=>{setVSel(v);setIsEditing(false);}} className="glass-card glass-card-hover rounded-xl p-5 cursor-pointer border-l-4 border-l-purple-500 flex flex-col justify-between h-full">
+                <div>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg mb-1">{v.destino}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-3"><i className="fa-solid fa-location-dot mr-1"></i>{v.localEmbarque}</p>
+                </div>
+                <div className="flex justify-between items-end border-t border-slate-100 dark:border-nDarkBorder pt-3 mt-2">
+                  <div className="text-sm text-slate-600 dark:text-slate-300 font-medium"><i className="fa-solid fa-calendar-day text-purple-500 mr-2"></i>{fmt(v.dataSaida)}</div>
+                  <span className="bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 px-3 py-1 rounded-lg text-sm font-bold border border-purple-100 dark:border-purple-500/20">{fmtMoeda(v.valor||0)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {viagensFiltered.length===0 && !showForm && <div className="text-center py-12 text-slate-400 text-base font-medium">Nenhuma viagem encontrada.</div>}
+
+          {vSelecionada && (
+            <Modal onClose={()=>{setVSel(null);setIsEditing(false);}} title={isEditing ? "Editar Viagem" : "Resumo da Viagem"}>
+              {isEditing ? (
+                <form onSubmit={salvar} className="grid grid-cols-1 md:grid-cols-2 gap-5 pb-2">
+                    <div className="md:col-span-2"><Inp name="destino" defaultValue={vSelecionada.destino} required label="Destino" /></div>
+                    <Inp type="date" name="dataSaida" defaultValue={vSelecionada.dataSaida} required label="Data Saída" /><Inp type="time" name="horaSaida" defaultValue={vSelecionada.horaSaida} required label="Hora Saída" />
+                    <Inp type="date" name="dataRetorno" defaultValue={vSelecionada.dataRetorno} required label="Data Retorno" /><Inp type="time" name="horaRetorno" defaultValue={vSelecionada.horaRetorno} required label="Hora Retorno" />
+                    <div className="md:col-span-2"><Inp name="localEmbarque" defaultValue={vSelecionada.localEmbarque} required label="Local de Embarque" /></div>
+                    <div className="md:col-span-2"><CurrencyInp name="valor" defaultValue={vSelecionada.valor} required label="Valor do Pacote por Pessoa" /></div>
+                    <div className="md:col-span-2 flex gap-3 mt-4">
+                        <button type="button" onClick={()=>setIsEditing(false)} className="flex-1 py-3.5 rounded-xl font-bold text-slate-600 bg-slate-100 dark:bg-nDarkBg border dark:border-nDarkBorder">Cancelar</button>
+                        <button type="submit" className="flex-1 py-3.5 text-white font-bold rounded-xl neon-button">Salvar</button>
+                    </div>
+                </form>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-slate-50 dark:bg-nDarkBg p-5 rounded-2xl border border-slate-200 dark:border-nDarkBorder">
+                    <h4 className="font-black text-2xl text-slate-800 dark:text-white mb-2">{vSelecionada.destino}</h4>
+                    <span className="bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 px-3 py-1.5 rounded-lg text-sm font-bold mb-5 inline-block border border-purple-200 dark:border-purple-500/30">Pacote: {fmtMoeda(vSelecionada.valor||0)}</span>
+                    <InfoRow icon="fa-plane-departure" label="Embarque/Saída" value={`${fmt(vSelecionada.dataSaida)} às ${vSelecionada.horaSaida}`} color="#10b981" />
+                    <InfoRow icon="fa-plane-arrival"   label="Retorno/Chegada"  value={`${fmt(vSelecionada.dataRetorno)} às ${vSelecionada.horaRetorno}`} color="#ef4444" />
+                    <InfoRow icon="fa-location-dot"    label="Localização" value={vSelecionada.localEmbarque} color="#f59e0b" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={excluir} className="w-14 h-14 rounded-xl flex items-center justify-center font-bold bg-red-50 text-red-600 hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:text-red-400"><i className="fa-solid fa-trash"></i></button>
+                    <button onClick={()=>setIsEditing(true)} className="flex-1 h-14 rounded-xl font-bold text-white neon-button flex items-center justify-center gap-2"><i className="fa-solid fa-pen"></i> Editar Viagem</button>
+                  </div>
+                </div>
+              )}
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    function Passageiros({ paxFiltered, viagens, viagemSelecionadaId, setViagemSelecionadaId, exportarPDF, caixa, reservas, userProfile, showDialog, searchParams }) {
+      const[showForm, setShowForm] = useState(false); const[passSel, setPassSel] = useState(null); const[isEditing, setIsEditing] = useState(false); const[formViagemId, setFormViagemId] = useState(viagemSelecionadaId);
+
+      const salvar = async (e) => {
+        e.preventDefault(); const t = e.target;
+        const cpfRaw = t.cpf.value.replace(/\D/g, ''); if(!isValidCPF(cpfRaw)) return showDialog('alert', 'Atenção', 'O CPF informado é inválido.');
+        const phoneRaw = t.tel.value.replace(/\D/g, ''); if(phoneRaw.length < 10) return showDialog('alert', 'Atenção', 'O telefone deve conter o DDD.');
+        const vSelecionadaNoForm = t.viagemIdInput ? t.viagemIdInput.value : formViagemId;
+        const d = { nome:t.nome.value, cpf:t.cpf.value, rg:t.rg.value, nascimento:t.nasc.value, telefone:t.tel.value, emergencial:t.emerg.value, viagemId: vSelecionadaNoForm };
+        const { db, collection, addDoc, doc, updateDoc } = window.NexoFB; const colRef = collection(db, "empresas", userProfile.empresaId, "passageiros");
+        
+        if (isEditing && passSel) { await updateDoc(doc(colRef, passSel.id), d); setPassSel(null); setIsEditing(false); } else { if(!d.viagemId) return showDialog('alert', 'Atenção', 'Selecione uma viagem.'); await addDoc(colRef, d); setShowForm(false); }
+      };
+
+      const excluir = () => { showDialog('confirm', 'Excluir Cliente', 'Deseja excluir este cliente? Seus pagamentos e poltrona serão desvinculados.', async () => { const { db, doc, deleteDoc, setDoc } = window.NexoFB; await deleteDoc(doc(db, "empresas", userProfile.empresaId, "passageiros", passSel.id)); let r = {...reservas}; let mudou = false; for(let v in r) { for(let p in r[v]) { if(r[v][p] === passSel.id) { delete r[v][p]; mudou = true; } } } if(mudou) await setDoc(doc(db, "empresas", userProfile.empresaId, "config", "reservas"), { mapa: r }); setPassSel(null); }); };
+
+      const vAtiva = viagens.find(v=>v.id===viagemSelecionadaId); const vValor = vAtiva ? (vAtiva.valor || 0) : 0;
+
+      return (
+        <div className="space-y-4">
+          <div className="glass-card p-4 rounded-2xl md:w-1/2 lg:w-1/3 mb-6">
+             <CustomSelect name="filtroV" label="Filtro Principal: Viagem" value={viagemSelecionadaId} onChange={val=>setViagemSelecionadaId(val)} options={viagens.map(v=>({label: v.destino, value: v.id}))} placeholder="Selecione uma viagem..." />
+          </div>
+          
+          <SectionHeader title={`Lista de Clientes (${paxFiltered.length})`} action={<div className="flex gap-3"><button onClick={()=>exportarPDF('roomingList')} className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-semibold flex items-center gap-2 hover:bg-slate-700 transition-colors"><i className="fa-solid fa-file-pdf"></i> <span className="hidden sm:inline">PDF</span></button><AddBtn onClick={()=>{setShowForm(!showForm); setFormViagemId(viagemSelecionadaId);}} active={showForm} label="Novo Cliente" /></div>} />
+          
+          <SearchBar value={searchParams.searchPax} onChange={searchParams.setSearchPax} placeholder="Buscar por nome ou CPF..." />
+
+          {showForm && (
+            <FormCard onSubmit={salvar}>
+              <div className="md:col-span-2"><Inp name="nome" required placeholder="Nome Completo" label="Nome" /></div>
+              <MaskedInp name="cpf" maskType="cpf" required placeholder="000.000.000-00" label="CPF" />
+              <Inp name="rg" required placeholder="Ex: MG-12.345" label="RG" />
+              <Inp type="date" name="nasc" required label="Nascimento" />
+              <MaskedInp name="tel" maskType="phone" required placeholder="(00) 00000-0000" label="Telefone" />
+              <div className="md:col-span-2"><Inp name="emerg" required placeholder="Contato (Nome/Tel)" label="Emergência" /></div>
+              <div className="md:col-span-2"><CustomSelect name="viagemIdInput" label="Vincular a Viagem" value={formViagemId} onChange={setFormViagemId} options={viagens.map(v=>({label:v.destino, value:v.id}))} required /></div>
+              <div className="md:col-span-2 mt-2 flex justify-end"><button type="submit" className="px-8 py-3 rounded-xl text-white font-bold neon-button">Salvar Cliente</button></div>
+            </FormCard>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {paxFiltered.map(p => {
+              const pago = caixa.filter(c=>c.tipo==='entrada'&&c.passageiroId===p.id).reduce((a,b)=>a+b.valor,0);
+              let badgeCls = "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"; let badgeTxt = "Pendente";
+              if(vValor > 0 && pago >= vValor) { badgeCls = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"; badgeTxt = "Pago"; } else if (pago > 0) { badgeCls = "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"; badgeTxt = "Parcial"; }
+              return (
+                <div key={p.id} onClick={()=>{setPassSel(p);setIsEditing(false);}} className="glass-card glass-card-hover rounded-xl p-4 flex items-center gap-4 cursor-pointer border-l-4 border-l-purple-400">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg text-purple-600 font-black bg-purple-100 dark:bg-purple-500/20 dark:text-purple-400 shrink-0">{p.nome.charAt(0)}</div>
+                  <div className="flex-1 min-w-0"><p className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{p.nome}</p><p className="text-xs text-slate-500 mt-1"><i className="fa-brands fa-whatsapp text-green-500 mr-1.5 text-sm"></i>{p.telefone}</p></div>
+                  <div className="text-right flex flex-col items-end gap-1.5"><span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border uppercase ${badgeCls}`}>{badgeTxt}</span><span className="text-xs text-slate-600 dark:text-slate-300 font-bold">{fmtMoeda(pago)}</span></div>
+                </div>
+              );
+            })}
+          </div>
+          {paxFiltered.length===0 && !showForm && <div className="text-center py-12 text-slate-400 text-base font-medium">Nenhum passageiro encontrado nesta viagem.</div>}
+
+          {passSel && (
+            <Modal onClose={()=>{setPassSel(null);setIsEditing(false);}} title={isEditing ? "Editar Cliente" : "Ficha do Cliente"}>
+              {isEditing ? (
+                  <form onSubmit={salvar} className="grid grid-cols-1 md:grid-cols-2 gap-5 pb-2">
+                    <div className="md:col-span-2"><Inp name="nome" defaultValue={passSel.nome} required label="Nome Completo" /></div>
+                    <MaskedInp name="cpf" defaultValue={passSel.cpf} maskType="cpf" required label="CPF" />
+                    <Inp name="rg" defaultValue={passSel.rg} required label="RG" />
+                    <Inp type="date" name="nasc" defaultValue={passSel.nascimento} required label="Nascimento" />
+                    <MaskedInp name="tel" defaultValue={passSel.telefone} maskType="phone" required label="Telefone" />
+                    <div className="md:col-span-2"><Inp name="emerg" defaultValue={passSel.emergencial} required label="Emergência" /></div>
+                    <div className="md:col-span-2"><CustomSelect name="viagemIdInput" label="Transferir de Viagem" defaultValue={passSel.viagemId} options={viagens.map(v=>({label:v.destino, value:v.id}))} /></div>
+                    <div className="md:col-span-2 flex gap-3 mt-4">
+                        <button type="button" onClick={()=>setIsEditing(false)} className="flex-1 py-3.5 rounded-xl font-bold text-slate-600 bg-slate-100 dark:bg-nDarkBg border dark:border-nDarkBorder">Cancelar</button>
+                        <button type="submit" className="flex-1 py-3.5 text-white font-bold rounded-xl neon-button">Salvar</button>
+                    </div>
+                  </form>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center mb-2">
+                    <div className="w-24 h-24 rounded-full flex items-center justify-center text-white font-black text-4xl mx-auto mb-4 bg-gradient-to-br from-purple-400 to-purple-600 shadow-md">{passSel.nome.charAt(0)}</div>
+                    <h3 className="font-black text-2xl text-slate-800 dark:text-white">{passSel.nome}</h3>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-nDarkBg p-5 rounded-2xl border border-slate-200 dark:border-nDarkBorder">
+                    <InfoRow icon="fa-id-card" label="CPF" value={passSel.cpf} />
+                    <InfoRow icon="fa-fingerprint" label="RG" value={passSel.rg} />
+                    <InfoRow icon="fa-cake-candles" label="Data Nasc." value={fmt(passSel.nascimento)} />
+                    <InfoRow icon="fa-phone" label="WhatsApp" value={passSel.telefone} color="#10b981" />
+                    <InfoRow icon="fa-heart-pulse" label="Contato de Emergência" value={passSel.emergencial} color="#ef4444" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={excluir} className="w-14 h-14 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:text-red-400"><i className="fa-solid fa-trash"></i></button>
+                    <button onClick={()=>setIsEditing(true)} className="flex-1 h-14 rounded-xl font-bold text-white neon-button flex items-center justify-center gap-2"><i className="fa-solid fa-pen"></i> Editar Cadastro</button>
+                  </div>
+                </div>
+              )}
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    function Caixa({ cxFiltered, viagens, viagemSelecionadaId, setViagemSelecionadaId, passageiros, fornecedores, exportarPDF, setReciboData, userProfile, showDialog, searchParams }) {
+      const [showForm, setShowForm] = useState(false); const[tipo, setTipo] = useState('entrada'); const[transSel, setTransSel] = useState(null); const[formViagemId, setFormViagemId] = useState(viagemSelecionadaId);
+
+      const entradas = cxFiltered.filter(c=>c.tipo==='entrada').reduce((a,b)=>a+b.valor,0);
+      const saidas = cxFiltered.filter(c=>c.tipo==='saida').reduce((a,b)=>a+b.valor,0);
+
+      const salvar = async (e) => {
+        e.preventDefault(); const t=e.target; 
+        const dataVal = (t.dataManual && t.dataManual.value) ? t.dataManual.value : new Date().toISOString().split('T')[0]; const horaVal = (t.horaManual && t.horaManual.value) ? t.horaManual.value : new Date().toTimeString().split(' ')[0].substring(0,5);
+        const vSelecionadaNoForm = t.viagemIdInput ? t.viagemIdInput.value : formViagemId;
+        const d = { viagemId: vSelecionadaNoForm, tipo, valor:parseFloat(t.valor.value), desc:t.desc.value, passageiroId: tipo === 'entrada' && t.passId ? t.passId.value : '', fornecedorId: tipo === 'saida' && t.fornId ? t.fornId.value : '', data: dataVal, hora: horaVal, forma:t.forma.value };
+        if(!d.viagemId) return showDialog('alert','Atenção','Selecione uma viagem para o lançamento.');
+        const { db, collection, addDoc } = window.NexoFB; await addDoc(collection(db, "empresas", userProfile.empresaId, "caixa"), d); setShowForm(false); e.target.reset();
+      };
+
+      const excluir = () => { showDialog('confirm', 'Excluir Transação', 'Atenção: Este lançamento será apagado do sistema.', async () => { const { db, doc, deleteDoc } = window.NexoFB; await deleteDoc(doc(db, "empresas", userProfile.empresaId, "caixa", transSel.id)); setTransSel(null); }); };
+
+      return (
+        <div className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="glass-card p-4 rounded-2xl flex-1 flex gap-3 items-center">
+                <CustomSelect name="filtroC" label="Filtrar por Viagem" value={viagemSelecionadaId} onChange={val=>setViagemSelecionadaId(val)} options={viagens.map(v=>({label: v.destino, value: v.id}))} placeholder="Geral / Todas as viagens" />
+                <button onClick={()=>exportarPDF('caixa')} className="w-14 h-[46px] rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-md shrink-0 mt-[26px] hover:bg-slate-700 transition-colors"><i className="fa-solid fa-file-pdf"></i></button>
+              </div>
+              <div className="glass-card rounded-2xl p-6 bg-[#1c1b22] dark:border-[#2a2931] text-white shadow-lg relative overflow-hidden md:w-80 shrink-0 border-0 flex flex-col justify-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600 rounded-full blur-[40px] opacity-30 translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+                <p className="text-xs font-bold uppercase text-purple-400 mb-1 relative z-10">Resultado (Lucro)</p>
+                <h3 className="text-3xl font-black relative z-10">{fmtMoeda(entradas-saidas)}</h3>
+              </div>
+          </div>
+
+          <SearchBar value={searchParams.searchCaixa} onChange={searchParams.setSearchCaixa} placeholder="Pesquisar por descrição, cliente ou fornecedor..." showDates={true} startDate={searchParams.dateCaixaStart} setStartDate={searchParams.setDateCaixaStart} endDate={searchParams.dateCaixaEnd} setEndDate={searchParams.setDateCaixaEnd} />
+          
+          <div className="flex justify-end mb-4">
+              <button onClick={()=>{setShowForm(!showForm); setFormViagemId(viagemSelecionadaId);}} className={`px-6 py-3 text-white font-bold rounded-xl shadow-lg transition-colors flex items-center gap-2 ${showForm?'bg-slate-500':'bg-blue-600 hover:bg-blue-700'}`}>{showForm ? <><i className="fa-solid fa-xmark"></i> Cancelar</> : <><i className="fa-solid fa-plus"></i> Lançar Transação</>}</button>
+          </div>
+          
+          {showForm && (
+            <FormCard onSubmit={salvar}>
+              <div className="md:col-span-2 flex gap-3"><button type="button" onClick={()=>setTipo('entrada')} className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all ${tipo==='entrada'?'bg-emerald-500 text-white shadow-md':'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-[#1c1b22] dark:border-[#2a2931]'}`}><i className="fa-solid fa-arrow-down mr-2"></i>Entrada (+)</button><button type="button" onClick={()=>setTipo('saida')} className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all ${tipo==='saida'?'bg-red-500 text-white shadow-md':'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-[#1c1b22] dark:border-[#2a2931]'}`}><i className="fa-solid fa-arrow-up mr-2"></i>Saída (-)</button></div>
+              <div className="md:col-span-2"><CustomSelect name="viagemIdInput" label="Pertence a qual Viagem?" value={formViagemId} onChange={setFormViagemId} options={viagens.map(v=>({label:v.destino, value:v.id}))} required /></div>
+              <CurrencyInp name="valor" required label="Valor da Transação (R$)" />
+              <Inp name="desc" required label="Descrição / Motivo" placeholder={tipo==='entrada'?"Ex: Pagamento Restante":"Ex: Combustível"} />
+              <div className="md:col-span-2">
+                  {tipo==='entrada' ? <CustomSelect name="passId" label="Vincular Cliente (Opcional)" options={[{label:'Lançamento Avulso', value:''}, ...passageiros.filter(p=>p.viagemId===formViagemId).map(p=>({label:p.nome, value:p.id}))]} /> : <CustomSelect name="fornId" label="Vincular Fornecedor (Opcional)" options={[{label:'Lançamento Avulso', value:''}, ...fornecedores.map(f=>({label:f.nome, value:f.id}))]} /> }
+              </div>
+              <div className="md:col-span-2"><CustomSelect name="forma" label="Forma de Pagamento" options={[{label:'Pix',value:'Pix'},{label:'Dinheiro',value:'Dinheiro'},{label:'Cartão de Crédito',value:'Cartão de Crédito'},{label:'Cartão de Débito',value:'Cartão de Débito'},{label:'Transferência',value:'Transferência'}]} required /></div>
+              <Inp type="date" name="dataManual" label="Data (Se não for hoje)" /><Inp type="time" name="horaManual" label="Hora (Opcional)" />
+              <div className="md:col-span-2 mt-2 flex justify-end"><button type="submit" className={`px-8 py-3 rounded-xl text-white font-bold transition-colors ${tipo==='entrada'?'bg-emerald-600 hover:bg-emerald-500':'bg-red-600 hover:bg-red-500'}`}>Gravar {tipo}</button></div>
+            </FormCard>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {cxFiltered.map(c => {
+              const vinculou = c.tipo === 'entrada' ? passageiros.find(p=>p.id===c.passageiroId)?.nome : fornecedores.find(f=>f.id===c.fornecedorId)?.nome;
+              return (
+              <div key={c.id} onClick={()=>setTransSel(c)} className={`glass-card glass-card-hover rounded-xl p-4 flex justify-between items-center cursor-pointer border-l-4 ${c.tipo==='entrada'?'border-l-emerald-500':'border-l-red-500'}`}>
+                <div className="flex items-center gap-4 min-w-0 pr-2">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${c.tipo==='entrada'?'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20':'bg-red-50 text-red-600 border border-red-100 dark:bg-red-500/10 dark:border-red-500/20'}`}><i className={`fa-solid ${c.tipo==='entrada'?'fa-arrow-down':'fa-arrow-up'} text-lg`}></i></div>
+                    <div className="min-w-0"><p className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{c.desc}</p><p className="text-[11px] text-slate-500 mt-0.5 truncate">{fmt(c.data)} {vinculou ? `• ${vinculou}` : ''}</p></div>
+                </div>
+                <p className={`font-black whitespace-nowrap ${c.tipo==='entrada'?'text-emerald-600':'text-red-500'}`}>{c.tipo==='entrada'?'+':'-'} {fmtMoeda(c.valor)}</p>
+              </div>
+            )})}
+          </div>
+          {cxFiltered.length===0 && !showForm && <div className="text-center py-12 text-slate-400 font-medium">Nenhuma transação financeira neste período.</div>}
+
+          {transSel && (
+            <Modal onClose={()=>setTransSel(null)} title="Comprovante Interno">
+              <div className="text-center mb-8">
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border ${transSel.tipo==='entrada'?'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30':'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/30'}`}><i className={`fa-solid ${transSel.tipo==='entrada'?'fa-arrow-down':'fa-arrow-up'} text-3xl`}></i></div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{transSel.tipo === 'entrada' ? 'Receita' : 'Despesa'}</p>
+                <h3 className={`font-black text-4xl mt-2 ${transSel.tipo==='entrada'?'text-emerald-600':'text-red-600'}`}>{transSel.tipo==='entrada'?'+':'-'} {fmtMoeda(transSel.valor)}</h3>
+              </div>
+              <div className="bg-slate-50 dark:bg-nDarkBg p-5 rounded-2xl border border-slate-200 dark:border-nDarkBorder mb-6">
+                <InfoRow icon="fa-tag" label="Descrição" value={transSel.desc} />
+                <InfoRow icon="fa-credit-card" label="Método" value={transSel.forma} />
+                <InfoRow icon="fa-calendar" label="Registro" value={`${fmt(transSel.data)} às ${transSel.hora}`} />
+                {transSel.tipo==='entrada' && transSel.passageiroId && <InfoRow icon="fa-user" label="Cliente Pagante" value={passageiros.find(p=>p.id===transSel.passageiroId)?.nome} />}
+                {transSel.tipo==='saida' && transSel.fornecedorId && <InfoRow icon="fa-handshake" label="Fornecedor / Destino" value={fornecedores.find(f=>f.id===transSel.fornecedorId)?.nome} color="#ef4444" />}
+              </div>
+              <div className="flex gap-3">
+                <button onClick={excluir} className="w-14 h-14 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:text-red-400"><i className="fa-solid fa-trash"></i></button>
+                {transSel.tipo==='entrada' && transSel.passageiroId ? <button onClick={()=>{const pass=passageiros.find(p=>p.id===transSel.passageiroId); setReciboData({valor:transSel.valor,desc:transSel.desc,clienteNome:pass.nome,clienteCpf:pass.cpf,data:transSel.data,hora:transSel.hora,forma:transSel.forma}); setTransSel(null); exportarPDF('recibo');}} className="flex-1 h-14 rounded-xl font-bold text-white neon-button flex items-center justify-center gap-2"><i className="fa-solid fa-file-invoice"></i> Emitir Recibo PDF</button> : <button disabled className="flex-1 h-14 rounded-xl font-bold bg-slate-100 text-slate-400 dark:bg-[#1c1b22] dark:text-slate-600 cursor-not-allowed">Recibo Indisponível</button>}
+              </div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    function Onibus({ viagens, viagemSelecionadaId, setViagemSelecionadaId, reservas, passageiros, exportarPDF, userProfile, showDialog }) {
+      const assentos = Array.from({length:46},(_,i)=>i+1);
+      const[assentoSel, setAssentoSel] = useState(null);
+      const reservasViagem = reservas[viagemSelecionadaId] || {};
+
+      const setReservaFirebase = async (r) => { const { db, doc, setDoc } = window.NexoFB; await setDoc(doc(db, "empresas", userProfile.empresaId, "config", "reservas"), { mapa: r }); };
+
+      return (
+        <div className="space-y-6 max-w-4xl mx-auto">
+          <div className="glass-card p-5 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="w-full md:w-2/3"><CustomSelect name="mapaV" label="Carregar Mapa da Viagem" value={viagemSelecionadaId} onChange={val=>setViagemSelecionadaId(val)} options={viagens.map(v=>({label: v.destino, value: v.id}))} placeholder="Selecione uma viagem..." /></div>
+            {viagemSelecionadaId && <button onClick={()=>exportarPDF('manifesto')} className="w-full md:w-auto px-6 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 mt-4 md:mt-0"><i className="fa-solid fa-print"></i> Manifesto</button>}
+          </div>
+          
+          {viagemSelecionadaId && (
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="glass-card p-6 rounded-[2rem] mx-auto shrink-0 w-[320px]">
+                  <div className="text-center mb-6"><h3 className="text-lg font-black text-slate-800 dark:text-white">Layout 46 Lugares</h3><p className="text-xs text-slate-500 mt-1">Clique nas poltronas para gerenciar</p></div>
+                  <div className="mx-auto rounded-[2.5rem] overflow-hidden bg-[#1c1b22] border-[6px] border-[#2a2931] shadow-xl relative" style={{width:280}}>
+                    <div className="h-14 flex items-center justify-center bg-purple-500/10 border-b-[3px] border-[#2a2931] relative">
+                        <i className="fa-solid fa-steering-wheel text-purple-400 text-2xl absolute left-6 opacity-50"></i>
+                        <span className="text-[10px] font-bold tracking-widest text-purple-400 uppercase">Frente</span>
+                    </div>
+                    <div className="grid grid-cols-5 gap-1.5 p-4 pb-6">
+                      {assentos.map(num => {
+                        const isOcupado = !!reservasViagem[num]; const isSel = assentoSel === num;
+                        let cls = isSel ? 'seat-sel' : isOcupado ? 'bg-slate-700 text-slate-400 border-[#3f3e46]' : 'bg-[#2a2931] text-white border-[#3f3e46] hover:bg-[#3f3e46]';
+                        return (<React.Fragment key={num}><button onClick={()=>setAssentoSel(num===assentoSel?null:num)} className={`seat-btn w-full aspect-[3/4] flex flex-col items-center justify-center text-[11px] font-black rounded-lg border-b-4 transition-all active:scale-90 ${cls}`}>{num}</button>{num%2===0 && num%4!==0 && <div className="w-2"></div>}</React.Fragment>);
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 w-full">
+                    {assentoSel ? (
+                        <div className="glass-card rounded-2xl p-6 border-2 border-purple-300 dark:border-purple-500/50 animate-scalein">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-xl font-black shadow-md">{assentoSel}</div>
+                                <div><p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Poltrona Selecionada</p><h3 className="text-xl font-black text-slate-800 dark:text-white mt-1">Ação Necessária</h3></div>
+                            </div>
+                            
+                            {reservasViagem[assentoSel] ? (
+                                <div className="space-y-4">
+                                    <div className="bg-slate-50 dark:bg-[#1c1b22] p-4 rounded-xl font-bold text-base border border-slate-200 dark:border-[#2a2931] flex items-center gap-3"><i className="fa-solid fa-user-check text-emerald-500 text-xl"></i> {passageiros.find(p=>p.id===reservasViagem[assentoSel])?.nome||'Desconhecido'}</div>
+                                    <button onClick={()=>{const r={...reservas};delete r[viagemSelecionadaId][assentoSel]; setReservaFirebase(r); setAssentoSel(null);}} className="w-full py-4 rounded-xl font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:border-red-500/30">Liberar Poltrona</button>
+                                </div>
+                            ) : (
+                                <CustomSelect name="atribuirP" label="Passageiros Disponíveis (Sem poltrona)" value="" options={passageiros.filter(p=>p.viagemId===viagemSelecionadaId && !Object.values(reservasViagem).includes(p.id)).map(p=>({label:p.nome, value:p.id}))} placeholder="Selecione um cliente para ocupar..." onChange={val => { if(!val) return; const r={...reservas}; if(!r[viagemSelecionadaId]) r[viagemSelecionadaId]={}; r[viagemSelecionadaId][assentoSel]=val; setReservaFirebase(r); setAssentoSel(null); }} />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="hidden md:flex h-full min-h-[300px] border-2 border-dashed border-slate-200 dark:border-nDarkBorder rounded-2xl items-center justify-center text-slate-400 flex-col gap-3 bg-slate-50/50 dark:bg-[#1c1b22]/50">
+                            <i className="fa-solid fa-hand-pointer text-4xl"></i>
+                            <p className="font-medium">Selecione uma poltrona no mapa ao lado.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function Fornecedores({ fornFiltered, exportarPDF, userProfile, showDialog, searchParams }) {
+      const[showForm, setShowForm] = useState(false); const[fSel, setFSel] = useState(null); const[isEditing, setIsEditing] = useState(false);
+
+      const salvar = async (e) => {
+        e.preventDefault(); const t = e.target;
+        const docRaw = t.doc.value.replace(/\D/g, ''); if(docRaw.length === 11) { if(!isValidCPF(docRaw)) return showDialog('alert', 'Atenção', 'CPF inválido.'); } else if(docRaw.length === 14) { if(!isValidCNPJ(docRaw)) return showDialog('alert', 'Atenção', 'CNPJ inválido.'); } else { return showDialog('alert', 'Atenção', 'Informe CPF (11) ou CNPJ (14) válido.'); }
+        const d = { servico:t.serv.value, nome:t.nome.value, documento:t.doc.value, contatoNome:t.cNome.value, telefone:t.tel.value, email:t.email.value, valorTotal: parseFloat(t.valorTotal.value||0), valorPago: parseFloat(t.valorPago.value||0), dataLimite: t.dataLimite.value, qtdReservas: parseInt(t.qtdReservas.value||0) };
+        const { db, collection, addDoc, doc, updateDoc } = window.NexoFB; const colRef = collection(db, "empresas", userProfile.empresaId, "fornecedores");
+        if (isEditing && fSel) { await updateDoc(doc(colRef, fSel.id), d); setFSel(null); setIsEditing(false); } else { await addDoc(colRef, d); setShowForm(false); }
+      };
+
+      const excluir = () => { showDialog('confirm', 'Excluir Fornecedor', 'Será removido permanentemente.', async () => { const { db, doc, deleteDoc } = window.NexoFB; await deleteDoc(doc(db, "empresas", userProfile.empresaId, "fornecedores", fSel.id)); setFSel(null); }); };
+
+      return (
+        <div className="space-y-4">
+          <SectionHeader title="Fornecedores & Parceiros" action={<div className="flex gap-3"><button onClick={()=>exportarPDF('fornecedores')} className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-semibold flex items-center gap-2 hover:bg-slate-700 transition-colors"><i className="fa-solid fa-file-pdf"></i> <span className="hidden sm:inline">Relatório</span></button><AddBtn onClick={()=>setShowForm(!showForm)} active={showForm} label="Novo Fornecedor" /></div>} />
+          
+          <SearchBar value={searchParams.searchForn} onChange={searchParams.setSearchForn} placeholder="Pesquisar por serviço ou empresa..." />
+
+          {showForm && (
+            <FormCard onSubmit={salvar}>
+              <div className="md:col-span-2"><Inp name="serv" required placeholder="Ex: Hotel Copacabana" label="Serviço Prestado" /></div>
+              <Inp name="nome" required placeholder="Razão Social / Nome" label="Empresa" />
+              <MaskedInp name="doc" maskType="cpfcnpj" required placeholder="CNPJ/CPF" label="Documento" />
+              <Inp name="cNome" required placeholder="Nome do Contato" label="Pessoa de Contato" />
+              <MaskedInp name="tel" maskType="phone" required placeholder="Telefone" label="Telefone" />
+              <div className="md:col-span-2"><Inp name="email" type="email" placeholder="E-mail" label="E-mail" /></div>
+              
+              <div className="md:col-span-2 border-t border-slate-200 dark:border-nDarkBorder pt-5 mt-2"><h4 className="font-bold text-slate-800 dark:text-white mb-4"><i className="fa-solid fa-coins mr-2 text-amber-500"></i>Controle de Pagamentos (Opcional)</h4></div>
+              <CurrencyInp name="valorTotal" label="Custo Total Acordado (R$)" />
+              <CurrencyInp name="valorPago" label="Valor Já Adiantado (R$)" />
+              <Inp name="dataLimite" type="date" label="Vencimento Principal" /><Inp name="qtdReservas" type="number" placeholder="Ex: 20 quartos" label="Qtd. Reservas (Se houver)" />
+              
+              <div className="md:col-span-2 mt-4 flex justify-end"><button type="submit" className="px-8 py-3 rounded-xl text-white font-bold neon-button">Cadastrar Parceiro</button></div>
+            </FormCard>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {fornFiltered.map(f => {
+              const vTot = f.valorTotal || 0; const vPag = f.valorPago || 0; const rest = vTot - vPag;
+              let bgSt = "bg-slate-50 border-slate-200 text-slate-500 dark:bg-[#1c1b22] dark:border-[#2a2931] dark:text-slate-400"; let txtSt = "Não def.";
+              if (vTot > 0 && rest <= 0) { bgSt = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"; txtSt = "Quitado"; } else if (vPag > 0 && rest > 0) { bgSt = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"; txtSt = "Parcial"; } else if (vTot > 0 && vPag === 0) { bgSt = "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"; txtSt = "Pendente"; }
+              
+              return (
+              <div key={f.id} onClick={()=>{setFSel(f);setIsEditing(false);}} className="glass-card glass-card-hover rounded-xl p-5 flex flex-col justify-between cursor-pointer border-l-4 border-l-purple-500">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400 text-lg border border-purple-100 dark:border-purple-500/20 shrink-0"><i className="fa-solid fa-building"></i></div>
+                  <div className="flex-1 min-w-0"><h4 className="font-bold text-base text-slate-800 dark:text-slate-100 truncate">{f.servico}</h4><p className="text-xs text-slate-500 truncate mt-1">{f.nome}</p></div>
+                </div>
+                {vTot > 0 && <div className="flex justify-between items-center border-t border-slate-100 dark:border-nDarkBorder pt-3"><span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase ${bgSt}`}>{txtSt}</span><span className="text-xs font-bold text-slate-600 dark:text-slate-300">Falta {fmtMoeda(rest)}</span></div>}
+              </div>
+            )})}
+          </div>
+          {fornFiltered.length===0 && !showForm && <div className="text-center py-12 text-slate-400 text-base font-medium">Nenhum parceiro cadastrado.</div>}
+
+          {fSel && (
+            <Modal onClose={()=>{setFSel(null);setIsEditing(false);}} title={isEditing ? "Editar Fornecedor" : "Detalhes do Parceiro"}>
+              {isEditing ? (
+                  <form onSubmit={salvar} className="grid grid-cols-1 md:grid-cols-2 gap-5 pb-2">
+                    <div className="md:col-span-2"><Inp name="serv" defaultValue={fSel.servico} required label="Serviço Prestado" /></div>
+                    <div className="md:col-span-2"><Inp name="nome" defaultValue={fSel.nome} required label="Empresa (Razão/Nome)" /></div>
+                    <MaskedInp name="doc" defaultValue={fSel.documento} maskType="cpfcnpj" required label="CNPJ / CPF" />
+                    <Inp name="cNome" defaultValue={fSel.contatoNome} required label="Contato Pessoal" />
+                    <MaskedInp name="tel" defaultValue={fSel.telefone} maskType="phone" required label="Telefone" />
+                    <Inp name="email" type="email" defaultValue={fSel.email} label="E-mail" />
+                    <div className="md:col-span-2 border-t border-slate-200 dark:border-nDarkBorder pt-5 mt-2"><h4 className="font-bold text-slate-800 dark:text-white mb-2"><i className="fa-solid fa-coins mr-2 text-amber-500"></i>Controle Financeiro</h4></div>
+                    <CurrencyInp name="valorTotal" defaultValue={fSel.valorTotal} label="Custo Total (R$)" />
+                    <CurrencyInp name="valorPago" defaultValue={fSel.valorPago} label="Valor Já Pago (R$)" />
+                    <Inp name="dataLimite" type="date" defaultValue={fSel.dataLimite} label="Vencimento" /><Inp name="qtdReservas" type="number" defaultValue={fSel.qtdReservas} label="Qtd. Reservas" />
+                    <div className="md:col-span-2 flex gap-3 mt-4">
+                        <button type="button" onClick={()=>setIsEditing(false)} className="flex-1 py-3.5 rounded-xl font-bold text-slate-600 bg-slate-100 dark:bg-nDarkBg border dark:border-nDarkBorder">Cancelar</button>
+                        <button type="submit" className="flex-1 py-3.5 text-white font-bold rounded-xl neon-button">Salvar Mudanças</button>
+                    </div>
+                  </form>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-5 border-b border-slate-200 dark:border-nDarkBorder pb-6">
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0"><i className="fa-solid fa-handshake text-3xl"></i></div>
+                    <div>
+                        <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1c1b22] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#2a2931] mb-2 inline-block uppercase">{fSel.nome}</span>
+                        <h3 className="font-black text-2xl text-slate-800 dark:text-white leading-tight">{fSel.servico}</h3>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-nDarkBg p-5 rounded-2xl border border-slate-200 dark:border-nDarkBorder">
+                    <InfoRow icon="fa-id-card" label="Documento" value={fSel.documento} />
+                    <InfoRow icon="fa-user-tie" label="Responsável" value={fSel.contatoNome} />
+                    <InfoRow icon="fa-phone" label="Contato" value={fSel.telefone} color="#10b981" />
+                    {fSel.email && <InfoRow icon="fa-envelope" label="E-mail" value={fSel.email} color="#3b82f6" />}
+                  </div>
+                  
+                  {(fSel.valorTotal > 0 || fSel.qtdReservas > 0) && (
+                      <div className="border border-slate-200 dark:border-nDarkBorder rounded-2xl overflow-hidden shadow-sm">
+                        <div className="bg-slate-100 dark:bg-[#1c1b22] p-4 border-b border-slate-200 dark:border-nDarkBorder"><h4 className="font-bold text-slate-800 dark:text-white"><i className="fa-solid fa-chart-line mr-2 text-purple-500"></i>Resumo do Acordo</h4></div>
+                        <div className="grid grid-cols-2 gap-px bg-slate-200 dark:bg-[#2a2931]">
+                          <div className="bg-white dark:bg-nDarkBg p-4"><p className="text-xs font-semibold text-slate-400 uppercase mb-1">Custo Total</p><p className="font-bold text-lg">{fmtMoeda(fSel.valorTotal||0)}</p></div>
+                          <div className="bg-white dark:bg-nDarkBg p-4"><p className="text-xs font-semibold text-emerald-500 uppercase mb-1">Pago / Adiantado</p><p className="font-bold text-lg text-emerald-600">{fmtMoeda(fSel.valorPago||0)}</p></div>
+                          <div className="bg-white dark:bg-nDarkBg p-4"><p className="text-xs font-semibold text-red-500 uppercase mb-1">Pendente</p><p className="font-bold text-lg text-red-600">{fmtMoeda((fSel.valorTotal||0)-(fSel.valorPago||0))}</p></div>
+                          <div className="bg-white dark:bg-nDarkBg p-4"><p className="text-xs font-semibold text-amber-500 uppercase mb-1">Vencimento</p><p className="font-bold text-base mt-1">{fmt(fSel.dataLimite)}</p></div>
+                        </div>
+                        {fSel.qtdReservas > 0 && <div className="bg-purple-600 text-white p-3 text-sm font-bold text-center"><i className="fa-solid fa-bed mr-2"></i> {fSel.qtdReservas} Reservas Registradas</div>}
+                      </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={excluir} className="w-14 h-14 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:text-red-400"><i className="fa-solid fa-trash"></i></button>
+                    <button onClick={()=>setIsEditing(true)} className="flex-1 h-14 rounded-xl font-bold text-white neon-button flex justify-center items-center gap-2"><i className="fa-solid fa-pen"></i> Alterar Dados</button>
+                  </div>
+                </div>
+              )}
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    /* ─── APLICATIVO PRINCIPAL (Desktop & Mobile Layout) ─── */
+    function MainApp({ userProfile, onLogout, showDialog, theme, toggleTheme }) {
+      const[activeTab, setActiveTab] = useState('dashboard');
+      const[printView, setPrintView] = useState('manifesto');
+      const[modalConfig, setModalConfig] = useState(false);
+      const[showNotificacoes, setShowNotificacoes] = useState(false);
+      const[notificacoes, setNotificacoes] = useState([]);
+      const[meusChamados, setMeusChamados] = useState([]);
+
+      const hora = new Date().getHours(); let saudacao = hora >= 5 && hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+
+      const[viagens, setViagens] = useState([]); const[viagemSelecionadaId, setViagemSelecionadaId] = useState('');
+      const[passageiros, setPassageiros] = useState([]); const[fornecedores, setFornecedores] = useState([]);
+      const[caixa, setCaixa] = useState([]); const[reservas, setReservas] = useState({}); const[reciboData, setReciboData] = useState(null);
+
+      const [searchViagens, setSearchViagens] = useState(''); const [dateViagensStart, setDateViagensStart] = useState(''); const [dateViagensEnd, setDateViagensEnd] = useState('');
+      const [searchPax, setSearchPax] = useState('');
+      const [searchCaixa, setSearchCaixa] = useState(''); const [dateCaixaStart, setDateCaixaStart] = useState(''); const [dateCaixaEnd, setDateCaixaEnd] = useState('');
+      const [searchForn, setSearchForn] = useState('');
+
+      useEffect(() => {
+        if(!userProfile) return;
+        const { db, collection, doc, onSnapshot, updateDoc, query, where } = window.NexoFB;
+        const empRef = doc(db, "empresas", userProfile.empresaId); const unsubs =[];
+        
+        const interval = setInterval(() => { updateDoc(empRef, { lastOnline: Date.now() }).catch(()=>{}); }, 60000);
+
+        unsubs.push(onSnapshot(collection(empRef, "viagens"), snap => { const arr =[]; snap.forEach(d => arr.push({id: d.id, ...d.data()})); setViagens(arr); if(arr.length > 0) { setViagemSelecionadaId(prev => (prev && arr.find(x=>x.id===prev)) ? prev : arr[0].id); } else { setViagemSelecionadaId(''); } }));
+        unsubs.push(onSnapshot(collection(empRef, "passageiros"), snap => { const arr =[]; snap.forEach(d => arr.push({id: d.id, ...d.data()})); setPassageiros(arr); }));
+        unsubs.push(onSnapshot(collection(empRef, "caixa"), snap => { const arr =[]; snap.forEach(d => arr.push({id: d.id, ...d.data()})); setCaixa(arr.sort((a,b) => b.data.localeCompare(a.data))); }));
+        unsubs.push(onSnapshot(collection(empRef, "fornecedores"), snap => { const arr =[]; snap.forEach(d => arr.push({id: d.id, ...d.data()})); setFornecedores(arr); }));
+        unsubs.push(onSnapshot(doc(empRef, "config", "reservas"), snap => { if(snap.exists()) setReservas(snap.data().mapa || {}); else setReservas({}); }));
+        unsubs.push(onSnapshot(collection(empRef, "notificacoes"), snap => { const arr =[]; snap.forEach(d => arr.push({id: d.id, ...d.data()})); setNotificacoes(arr.sort((a,b) => { const getTime = (val) => { if (!val) return 0; if (val.toDate) return val.toDate().getTime(); return new Date(val).getTime() || 0; }; return getTime(b.data) - getTime(a.data); })); }));
+        unsubs.push(onSnapshot(query(collection(db, "chamados_suporte"), where("empresaId", "==", userProfile.empresaId)), snap => { const arr =[]; snap.forEach(d => arr.push({id: d.id, ...d.data()})); setMeusChamados(arr.sort((a,b) => new Date(b.data).getTime() - new Date(a.data).getTime())); }));
+
+        return () => { unsubs.forEach(fn => fn()); clearInterval(interval); };
+      },[userProfile]);
+
+      const filteredViagens = viagens.filter(v => { let matchText = true; let matchStart = true; let matchEnd = true; if(searchViagens) matchText = v.destino.toLowerCase().includes(searchViagens.toLowerCase()) || v.localEmbarque.toLowerCase().includes(searchViagens.toLowerCase()); if(dateViagensStart) matchStart = v.dataSaida >= dateViagensStart; if(dateViagensEnd) matchEnd = v.dataSaida <= dateViagensEnd; return matchText && matchStart && matchEnd; });
+      const filteredPax = passageiros.filter(p => p.viagemId === viagemSelecionadaId).filter(p => { if(!searchPax) return true; const term = searchPax.toLowerCase(); return p.nome.toLowerCase().includes(term) || p.cpf.includes(term); });
+      const cxViagem = viagemSelecionadaId ? caixa.filter(c => c.viagemId === viagemSelecionadaId) : caixa;
+      const filteredCaixa = cxViagem.filter(c => { let matchText = true; let matchStart = true; let matchEnd = true; if(searchCaixa) { const term = searchCaixa.toLowerCase(); const pName = (passageiros.find(x => x.id === c.passageiroId)?.nome || '').toLowerCase(); const fName = (fornecedores.find(x => x.id === c.fornecedorId)?.nome || '').toLowerCase(); matchText = c.desc.toLowerCase().includes(term) || pName.includes(term) || fName.includes(term); } if(dateCaixaStart) matchStart = c.data >= dateCaixaStart; if(dateCaixaEnd) matchEnd = c.data <= dateCaixaEnd; return matchText && matchStart && matchEnd; });
+      const filteredForn = fornecedores.filter(f => { if(!searchForn) return true; const term = searchForn.toLowerCase(); return f.nome.toLowerCase().includes(term) || f.servico.toLowerCase().includes(term) || f.documento.includes(term); });
+      const unreadCount = notificacoes.filter(n => !n.lida).length;
+
+      const exportarPDF = (tipo) => { if (typeof ReactDOM.flushSync === 'function') { try { ReactDOM.flushSync(() => setPrintView(tipo)); } catch(e) { setPrintView(tipo); } } else { setPrintView(tipo); } setTimeout(() => { try { window.print(); } catch(err) { console.error("Erro na impressão: ", err); } }, 800); };
+
+      const NavItem = ({ icon, label, id }) => (
+          <button onClick={()=>setActiveTab(id)} className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl font-semibold transition-all ${activeTab === id ? 'bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1c1b22] hover:text-slate-800 dark:hover:text-slate-200 border border-transparent'}`}>
+              <i className={`fa-solid ${icon} w-5 text-center text-lg`}></i> <span>{label}</span>
+          </button>
+      );
+
+      const NavItemMobile = ({ icon, label, id }) => (
+          <button onClick={()=>setActiveTab(id)} className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${activeTab === id ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-slate-500'}`}>
+              <i className={`fa-solid ${icon} text-xl mb-1 ${activeTab === id ? 'scale-110 transition-transform' : ''}`}></i>
+              <span className="text-[10px] font-bold">{label}</span>
+          </button>
+      );
+
+      return (
+        <div className="flex h-screen w-full overflow-hidden bg-slate-50 dark:bg-nDarkBg relative print:h-auto print:overflow-visible">
+          
+          {/* --- UI PRINCIPAL (Oculta na impressão) --- */}
+          <div className="flex h-full w-full print:hidden">
+              {/* Sidebar Desktop */}
+              <aside className="hidden md:flex flex-col w-64 h-full bg-white dark:bg-[#151419] border-r border-slate-200 dark:border-[#2a2931] shrink-0 z-20">
+                  <div className="p-6 border-b border-slate-100 dark:border-[#2a2931]">
+                      <div className="flex items-center gap-3 mb-1">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                              <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg"><path d="M 25 15 C 32 15 35 20 35 25 L 35 50 L 62 18 C 68 12 75 15 75 25 L 75 85 C 68 85 65 80 65 75 L 65 50 L 38 82 C 32 88 25 85 25 75 Z" fill="currentColor"/></svg>
+                          </div>
+                          <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">NEXO</h1>
+                      </div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 ml-13">ERP Tour</p>
+                  </div>
+                  <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+                      <NavItem icon="fa-chart-pie" label="Dashboard" id="dashboard" />
+                      <NavItem icon="fa-map-location-dot" label="Viagens" id="viagens" />
+                      <NavItem icon="fa-users" label="Clientes" id="passageiros" />
+                      <NavItem icon="fa-wallet" label="Financeiro" id="caixa" />
+                      <NavItem icon="fa-handshake" label="Fornecedores" id="fornecedores" />
+                      <NavItem icon="fa-bus" label="Poltronas" id="reservas" />
+                  </nav>
+                  <div className="p-4 border-t border-slate-100 dark:border-[#2a2931]">
+                      <button onClick={() => setModalConfig(true)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-[#1c1b22] transition-colors text-left border border-transparent hover:border-slate-200 dark:hover:border-[#2a2931]">
+                          <div className="w-10 h-10 bg-slate-200 dark:bg-[#2a2931] text-slate-600 dark:text-slate-300 rounded-lg flex items-center justify-center font-bold">{userProfile.nome.charAt(0)}</div>
+                          <div className="flex-1 min-w-0"><p className="text-sm font-bold text-slate-800 dark:text-white truncate">{userProfile.nome}</p><p className="text-xs text-slate-500 truncate">Configurações</p></div>
+                      </button>
+                  </div>
+              </aside>
+
+              {/* Main Content Area */}
+              <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                  
+                  {/* Topbar Desktop / Header Mobile */}
+                  <header className="h-20 bg-white dark:bg-[#151419] border-b border-slate-200 dark:border-[#2a2931] flex items-center justify-between px-5 md:px-8 shrink-0 z-10 shadow-sm md:shadow-none transition-colors">
+                      <div className="md:hidden flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                              <svg viewBox="0 0 100 100" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg"><path d="M 25 15 C 32 15 35 20 35 25 L 35 50 L 62 18 C 68 12 75 15 75 25 L 75 85 C 68 85 65 80 65 75 L 65 50 L 38 82 C 32 88 25 85 25 75 Z" fill="currentColor"/></svg>
+                          </div>
+                          <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 leading-tight">Nexo ERP</p>
+                              <h2 className="text-lg font-black text-slate-800 dark:text-white leading-tight truncate max-w-[150px]">{userProfile.nome}</h2>
+                          </div>
+                      </div>
+                      <div className="hidden md:block">
+                          <h2 className="text-xl font-bold text-slate-800 dark:text-white capitalize">{activeTab === 'dashboard' ? `Olá, ${saudacao}` : activeTab === 'passageiros' ? 'Gestão de Clientes' : activeTab === 'caixa' ? 'Controle Financeiro' : activeTab}</h2>
+                          <p className="text-xs text-slate-500 font-medium">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                          <button onClick={() => setShowNotificacoes(true)} className="relative w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-[#1c1b22] hover:bg-slate-200 dark:hover:bg-[#2a2931] transition-colors"><i className="fa-solid fa-bell"></i>{unreadCount > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-[#151419]"></span>}</button>
+                          <button onClick={() => setModalConfig(true)} className="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-[#1c1b22]"><i className="fa-solid fa-gear"></i></button>
+                      </div>
+                  </header>
+
+                  {/* Scrollable Content */}
+                  <main className="flex-1 overflow-y-auto p-5 md:p-8 pb-24 md:pb-8 no-scrollbar bg-slate-50 dark:bg-nDarkBg relative z-0">
+                      <div className="max-w-7xl mx-auto animate-fadeinup">
+                          {activeTab === 'dashboard'   && <Dashboard viagens={viagens} caixa={caixa} passageiros={passageiros} reservas={reservas} />}
+                          {activeTab === 'viagens'     && <Viagens viagensFiltered={filteredViagens} userProfile={userProfile} showDialog={showDialog} searchParams={{searchViagens, setSearchViagens, dateViagensStart, setDateViagensStart, dateViagensEnd, setDateViagensEnd}} />}
+                          {activeTab === 'passageiros' && <Passageiros paxFiltered={filteredPax} viagens={viagens} viagemSelecionadaId={viagemSelecionadaId} setViagemSelecionadaId={setViagemSelecionadaId} exportarPDF={exportarPDF} caixa={caixa} reservas={reservas} userProfile={userProfile} showDialog={showDialog} searchParams={{searchPax, setSearchPax}} />}
+                          {activeTab === 'reservas'    && <Onibus viagens={viagens} viagemSelecionadaId={viagemSelecionadaId} setViagemSelecionadaId={setViagemSelecionadaId} reservas={reservas} passageiros={passageiros} exportarPDF={exportarPDF} userProfile={userProfile} showDialog={showDialog} />}
+                          {activeTab === 'caixa'       && <Caixa cxFiltered={filteredCaixa} viagens={viagens} viagemSelecionadaId={viagemSelecionadaId} setViagemSelecionadaId={setViagemSelecionadaId} passageiros={passageiros} fornecedores={fornecedores} exportarPDF={exportarPDF} setReciboData={setReciboData} userProfile={userProfile} showDialog={showDialog} searchParams={{searchCaixa, setSearchCaixa, dateCaixaStart, setDateCaixaStart, dateCaixaEnd, setDateCaixaEnd}} />}
+                          {activeTab === 'fornecedores'&& <Fornecedores fornFiltered={filteredForn} exportarPDF={exportarPDF} userProfile={userProfile} showDialog={showDialog} searchParams={{searchForn, setSearchForn}} />}
+                      </div>
+                  </main>
+
+                  {/* Bottom Nav Mobile */}
+                  <nav className="md:hidden fixed bottom-0 w-full h-16 bg-white dark:bg-[#151419] border-t border-slate-200 dark:border-[#2a2931] pb-safe flex justify-around items-center px-1 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_20px_rgba(0,0,0,0.2)]">
+                      <NavItemMobile icon="fa-chart-pie" label="Início" id="dashboard" />
+                      <NavItemMobile icon="fa-map-location-dot" label="Viagens" id="viagens" />
+                      <NavItemMobile icon="fa-users" label="Clientes" id="passageiros" />
+                      <NavItemMobile icon="fa-wallet" label="Caixa" id="caixa" />
+                      <NavItemMobile icon="fa-handshake" label="Serviços" id="fornecedores" />
+                      <NavItemMobile icon="fa-bus" label="Poltronas" id="reservas" />
+                  </nav>
+              </div>
+
+              {/* Modais Globais */}
+              {modalConfig && <Configuracoes chamados={meusChamados} onLogout={onLogout} onClose={()=>setModalConfig(false)} userProfile={userProfile} showDialog={showDialog} theme={theme} toggleTheme={toggleTheme} />}
+              
+              {showNotificacoes && (
+                  <Modal onClose={()=>setShowNotificacoes(false)} title="Centro de Notificações">
+                      {notificacoes.length === 0 ? <div className="text-center text-slate-400 py-16"><i className="fa-solid fa-bell-slash text-5xl mb-4 block opacity-30"></i><p className="font-medium">Você não tem novas notificações.</p></div> : (
+                          <div className="space-y-3 pb-4"> {notificacoes.map(n => ( <NotificacaoItem key={n.id} notif={n} onDelete={async (id)=>await window.NexoFB.deleteDoc(window.NexoFB.doc(window.NexoFB.db, "empresas", userProfile.empresaId, "notificacoes", id))} onRead={async (id)=>await window.NexoFB.updateDoc(window.NexoFB.doc(window.NexoFB.db, "empresas", userProfile.empresaId, "notificacoes", id), { lida: true })} /> ))} </div>
+                      )}
+                  </Modal>
+              )}
+          </div>
+
+          {/* --- ÁREA EXCLUSIVA PARA IMPRESSÃO PDF --- */}
+          <div className="hidden print:block p-8 text-black bg-white font-sans w-full max-w-5xl mx-auto">
+            {printView !== 'recibo' && (
+              <div className="border-b-2 border-slate-300 pb-6 mb-8 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 flex items-center justify-center">
+                      <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg"><path d="M 25 15 C 32 15 35 20 35 25 L 35 50 L 62 18 C 68 12 75 15 75 25 L 75 85 C 68 85 65 80 65 75 L 65 50 L 38 82 C 32 88 25 85 25 75 Z" fill="#9333ea"/></svg>
+                  </div>
+                  <div>
+                      <h1 className="text-2xl font-black uppercase tracking-tighter text-slate-800 flex items-baseline gap-1" style={{lineHeight:'1'}}>NEXO <span className="font-light text-purple-600 text-xl">ERP</span></h1>
+                      <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Documento Oficial de Sistema</p>
+                  </div>
+                </div>
+                <div className="text-right"><p className="font-bold text-base text-slate-800">{userProfile.nome}</p><p className="text-xs text-slate-500 mt-1">Emitido em: {new Date().toLocaleDateString('pt-BR')}</p></div>
+              </div>
+            )}
+            
+            {printView === 'caixa' && (() => {
+              const vSelecionada = viagens.find(v => v.id === viagemSelecionadaId);
+              const ent = filteredCaixa.filter(c=>c.tipo==='entrada').reduce((a,b)=>a+b.valor,0); const sai = filteredCaixa.filter(c=>c.tipo==='saida').reduce((a,b)=>a+b.valor,0); const lucro = ent - sai;
+              let infoPeriodo = ''; if(dateCaixaStart && dateCaixaEnd) infoPeriodo = ` (De ${fmt(dateCaixaStart)} a ${fmt(dateCaixaEnd)})`; else if(dateCaixaStart) infoPeriodo = ` (A partir de ${fmt(dateCaixaStart)})`; else if(dateCaixaEnd) infoPeriodo = ` (Até ${fmt(dateCaixaEnd)})`;
+
+              return (
+                <div>
+                  <h2 className="text-2xl font-black bg-slate-100 p-4 mb-6 uppercase border-l-8 border-l-purple-600 text-slate-800 rounded-r-lg">Balancete Financeiro: {vSelecionada ? vSelecionada.destino : 'Geral'}{infoPeriodo}</h2>
+                  <div className="grid grid-cols-3 gap-6 mb-8">
+                      <div className="p-5 border border-slate-200 rounded-xl bg-slate-50"><p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Receitas (+)</p><p className="text-2xl font-black text-emerald-600 mt-2">{fmtMoeda(ent)}</p></div>
+                      <div className="p-5 border border-slate-200 rounded-xl bg-slate-50"><p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Despesas (-)</p><p className="text-2xl font-black text-red-600 mt-2">{fmtMoeda(sai)}</p></div>
+                      <div className="p-5 border-2 border-slate-800 rounded-xl bg-slate-800 text-white"><p className="text-xs font-bold text-purple-300 uppercase tracking-widest">Resultado Final</p><p className="text-2xl font-black mt-2">{fmtMoeda(lucro)}</p></div>
+                  </div>
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead><tr className="bg-slate-100 border-b-2 border-slate-300"><th className="p-3 font-bold text-slate-700">Data</th><th className="p-3 font-bold text-slate-700">Descrição</th><th className="p-3 font-bold text-slate-700">Vínculo</th><th className="p-3 font-bold text-slate-700 text-right">Valor (R$)</th></tr></thead>
+                    <tbody>
+                      {filteredCaixa.map(c => {
+                        const p = passageiros.find(x => x.id === c.passageiroId); const f = fornecedores.find(x => x.id === c.fornecedorId); const vinculo = c.tipo === 'entrada' ? (p ? p.nome : '—') : (f ? f.nome : '—');
+                        return (<tr key={c.id} className="border-b border-slate-200"><td className="p-3 text-slate-600">{fmt(c.data)}</td><td className="p-3 font-bold text-slate-800">{c.desc} <span className="text-[10px] font-normal text-slate-400 ml-1">({c.tipo})</span></td><td className="p-3 text-slate-600">{vinculo}</td><td className={`p-3 text-right font-black ${c.tipo==='entrada'?'text-emerald-600':'text-red-600'}`}>{c.tipo==='entrada'?'+':'-'} {fmtMoeda(c.valor)}</td></tr>);
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+
+            {printView === 'roomingList' && (() => {
+              const vSelecionada = viagens.find(v => v.id === viagemSelecionadaId);
+              return (
+                <div>
+                  <h2 className="text-2xl font-black bg-slate-100 p-4 mb-6 uppercase border-l-8 border-l-purple-600 text-slate-800 rounded-r-lg">Rooming List: {vSelecionada ? vSelecionada.destino : ''}</h2>
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead><tr className="bg-slate-100 border-b-2 border-slate-300"><th className="p-3 font-bold text-slate-700">Nome Completo</th><th className="p-3 font-bold text-slate-700">CPF</th><th className="p-3 font-bold text-slate-700">RG</th><th className="p-3 font-bold text-slate-700">Nascimento</th><th className="p-3 font-bold text-slate-700">Telefone</th></tr></thead>
+                    <tbody>
+                      {filteredPax.map(p=>(
+                        <tr key={p.id} className="border-b border-slate-200"><td className="p-3 font-bold text-slate-800">{p.nome}</td><td className="p-3 text-slate-600">{p.cpf}</td><td className="p-3 text-slate-600">{p.rg}</td><td className="p-3 text-slate-600">{fmt(p.nascimento)}</td><td className="p-3 text-slate-600">{p.telefone}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+            
+            {printView === 'manifesto' && (() => {
+              const vSelecionada = viagens.find(v => v.id === viagemSelecionadaId);
+              return (
+                <div>
+                  <h2 className="text-2xl font-black bg-slate-100 p-4 mb-6 uppercase border-l-8 border-l-purple-600 text-slate-800 rounded-r-lg">Manifesto de Transporte: {vSelecionada ? vSelecionada.destino : ''}</h2>
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead><tr className="bg-slate-100 border-b-2 border-slate-300"><th className="p-3 font-bold text-slate-700 text-center w-24">Poltrona</th><th className="p-3 font-bold text-slate-700">Passageiro</th><th className="p-3 font-bold text-slate-700">Documento (RG)</th><th className="p-3 font-bold text-slate-700">Contato</th><th className="p-3 font-bold text-slate-700">Emergência</th></tr></thead>
+                    <tbody>
+                      {Array.from({length:46},(_,i)=>i+1).map(num=>{ 
+                        const p = passageiros.find(x=>x.id===reservas[viagemSelecionadaId]?.[num]); 
+                        return (<tr key={num} className="border-b border-slate-200"><td className="p-3 text-center font-black text-lg text-purple-600">{num}</td><td className={`p-3 ${p?'font-bold text-slate-800':'text-slate-400 italic'}`}>{p?p.nome:'Livre'}</td><td className="p-3 text-slate-600">{p?p.rg:'—'}</td><td className="p-3 text-slate-600">{p?p.telefone:'—'}</td><td className="p-3 text-slate-600 text-xs">{p?p.emergencial:'—'}</td></tr>);
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+            
+            {printView === 'recibo' && reciboData && (
+              <div className="border-2 border-slate-300 p-10 rounded-3xl max-w-3xl mx-auto mt-10 relative shadow-sm">
+                  <div className="absolute top-0 right-0 bg-purple-600 text-white font-black px-8 py-3 rounded-bl-3xl rounded-tr-2xl uppercase tracking-widest text-lg">Recibo Oficial</div>
+                  <div className="flex justify-between items-end border-b-2 border-slate-200 pb-8 mb-8 mt-6">
+                      <div>
+                          <div className="flex items-center gap-4 mb-2">
+                              <div className="w-12 h-12 flex items-center justify-center">
+                                  <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg"><path d="M 25 15 C 32 15 35 20 35 25 L 35 50 L 62 18 C 68 12 75 15 75 25 L 75 85 C 68 85 65 80 65 75 L 65 50 L 38 82 C 32 88 25 85 25 75 Z" fill="#9333ea"/></svg>
+                              </div>
+                              <h2 className="text-3xl font-black text-slate-800">{userProfile.nome}</h2>
+                          </div>
+                      </div>
+                      <div className="text-right bg-slate-100 px-8 py-4 rounded-xl border border-slate-200"><p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">Valor do Recibo</p><h3 className="text-4xl font-black text-purple-600">R$ {reciboData.valor.toFixed(2)}</h3></div>
+                  </div>
+                  <div className="space-y-6 text-xl leading-relaxed text-slate-700">
+                      <p>Recebemos de <strong className="text-black uppercase">{reciboData.clienteNome}</strong> (CPF: {reciboData.clienteCpf}),</p><p>A importância de <strong className="text-black">R$ {reciboData.valor.toFixed(2)}</strong> referente a <strong className="text-black">{reciboData.desc}</strong>.</p>
+                      <div className="grid grid-cols-2 gap-6 mt-8 bg-slate-50 p-6 rounded-2xl border border-slate-200"><div><p className="text-sm font-bold text-slate-400 uppercase mb-2">Forma de Pagamento</p><p className="font-bold text-lg">{reciboData.forma}</p></div><div><p className="text-sm font-bold text-slate-400 uppercase mb-2">Data / Hora</p><p className="font-bold text-lg">{fmt(reciboData.data)} às {reciboData.hora}</p></div></div>
+                  </div>
+                  <div className="mt-24 pt-8 border-t-2 border-dashed border-slate-300 text-center w-2/3 mx-auto"><p className="font-black text-2xl text-slate-800">{userProfile.nome}</p><p className="text-sm text-slate-500 mt-2">Gerado eletronicamente via Nexo ERP</p></div>
+              </div>
+            )}
+            
+            {printView === 'fornecedores' && (
+              <div>
+                <h2 className="text-2xl font-black bg-slate-100 p-4 mb-6 uppercase border-l-8 border-l-purple-600 text-slate-800 rounded-r-lg">Relação de Fornecedores & Serviços</h2>
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead><tr className="bg-slate-100 border-b-2 border-slate-300"><th className="p-3 font-bold text-slate-700">Serviço & Empresa</th><th className="p-3 font-bold text-slate-700">Contato</th><th className="p-3 font-bold text-slate-700 text-right">Financeiro (R$)</th><th className="p-3 font-bold text-slate-700 text-center">Vencimento</th></tr></thead>
+                  <tbody>
+                    {filteredForn.map(f=>(
+                      <tr key={f.id} className="border-b border-slate-200"><td className="p-3"><p className="font-bold text-slate-800 text-base">{f.servico}</p><p className="text-xs text-slate-500 mt-1">{f.nome}</p></td><td className="p-3 text-slate-600"><p className="font-medium text-slate-800">{f.telefone}</p><p className="text-xs">{f.contatoNome}</p></td><td className="p-3 text-right"><p className="font-bold text-slate-800">Total: {fmtMoeda(f.valorTotal||0)}</p><p className="text-xs text-emerald-600 font-bold mt-1">Pago: {fmtMoeda(f.valorPago||0)}</p></td><td className="p-3 text-center font-medium text-slate-700">{fmt(f.dataLimite)}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function NexoFRP() {
+      const[fbReady, setFbReady] = useState(!!window.NexoFB);
+      const[userProfile, setUserProfile] = useState(null);
+      const[loading, setLoading] = useState(true);
+      const[dialogConfig, setDialogConfig] = useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
+      
+      const [theme, setTheme] = useState(() => localStorage.getItem('nexo-theme') || 'light');
+      useEffect(() => { if (theme === 'dark') document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); localStorage.setItem('nexo-theme', theme); }, [theme]);
+      const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+
+      const showDialog = (type, title, message, onConfirm = null) => { SoundManager.init(); if (title === 'Sucesso' || title.includes('Recebemos')) { SoundManager.success(); } else if (title === 'Atenção' || title.includes('Erro') || title.includes('Negado') || title.includes('Bloqueado')) { SoundManager.error(); } else { SoundManager.click(); } setDialogConfig({ isOpen: true, type, title, message, onConfirm }); };
+
+      useEffect(() => {
+        if(!fbReady) { const handleReady = () => setFbReady(true); window.addEventListener('firebase-ready', handleReady); return () => window.removeEventListener('firebase-ready', handleReady); }
+        const { auth, db, onAuthStateChanged, getDoc, doc, signOut } = window.NexoFB;
+        const unsub = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+                    if(userDoc.exists()) {
+                        const data = userDoc.data(); const empDoc = await getDoc(doc(db, "empresas", data.empresaId));
+                        if(empDoc.exists() && empDoc.data().status === 'Ativo') {
+                            const empData = empDoc.data();
+                            if (empData.plano !== 'Vitalício' && empData.vencimento) {
+                                const hoje = new Date(); const vencimento = new Date(empData.vencimento + 'T00:00:00'); vencimento.setHours(vencimento.getHours() + 24);
+                                if (hoje > vencimento) { showDialog('alert', 'Acesso Bloqueado', 'Sua assinatura expirou. Regularize para voltar a acessar.'); await signOut(auth); setUserProfile(null); setLoading(false); return; }
+                            }
+                            setUserProfile({ uid: user.uid, email: user.email, empresaId: data.empresaId, nome: empData.nomeFantasia, assinatura: { plano: empData.plano, vencimento: empData.vencimento, valor: empData.valorMensalidade } });
+                        } else { showDialog('alert', 'Acesso Negado', 'Sua conta está inativa ou bloqueada.'); await signOut(auth); setUserProfile(null); }
+                    } else { showDialog('alert', 'Erro', 'Perfil não localizado no sistema.'); await signOut(auth); }
+                } catch(e) { await signOut(auth); }
+            } else { setUserProfile(null); }
+            setLoading(false);
+        });
+        return () => unsub();
+      }, [fbReady]);
+
+      if(!fbReady || loading) return (
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-[#0f0e13]">
+          <div className="w-24 h-24 relative flex items-center justify-center animate-pulse-glow">
+              <svg viewBox="0 0 100 100" className="w-full h-full relative z-10" xmlns="http://www.w3.org/2000/svg">
+                  <defs><linearGradient id="nexoGradSplash" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#c084fc" /><stop offset="100%" stopColor="#6b21a8" /></linearGradient></defs>
+                  <path d="M 25 15 C 32 15 35 20 35 25 L 35 50 L 62 18 C 68 12 75 15 75 25 L 75 85 C 68 85 65 80 65 75 L 65 50 L 38 82 C 32 88 25 85 25 75 Z" fill="url(#nexoGradSplash)" />
+              </svg>
+          </div>
+          <p className="mt-8 text-purple-400 font-bold tracking-widest text-xs uppercase animate-pulse">Carregando Plataforma...</p>
+        </div>
+      );
+      
+      return (
+        <>
+            {!userProfile ? <Login showDialog={showDialog} /> : <MainApp userProfile={userProfile} onLogout={async () => { await window.NexoFB.signOut(window.NexoFB.auth); }} showDialog={showDialog} theme={theme} toggleTheme={toggleTheme} />}
+            <CustomDialog config={dialogConfig} onClose={() => setDialogConfig(prev => ({ ...prev, isOpen: false }))} />
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<NexoFRP />);
+  </script>
+  <script>
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Erro:', err)); });
+    }
+  </script>
+</body>
+</html>
+```
